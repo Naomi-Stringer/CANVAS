@@ -40,18 +40,7 @@ df['hour'] = pd.to_numeric(df["HH24"], errors='coerce')
 df['minute'] = pd.to_numeric(df["MI format in Local standard time"], errors='coerce')
 df['date_time'] = pd.to_datetime(df[["year","month","day","hour","minute"]])
 
-# Identify first and last non-zero value for each day
-df['change_in_irr_SHIFTED'] = df['change_in_irr'].shift(periods=1)
-df['flag_day_start'] = 0
-df['flag_day_end'] = 0
-df['dummy'] = 0
-df['flag_day_start'] = np.select([df.change_in_irr.isnull(), df.change_in_irr_SHIFTED.notnull()], [df.flag_day_start, df.dummy], default=1)
-df['flag_day_end'] = np.select([df.change_in_irr.notnull(), df.change_in_irr_SHIFTED.isnull()], [df.flag_day_end, df.dummy], default=1)
 
-# Get list of start and end times
-df_day_start_times = df[df['flag_day_start']==1]
-df_day_start_times = df_day_start_times[df_day_start_times['hour']<12]
-# Remove times >12
 
 
 
