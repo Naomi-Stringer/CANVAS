@@ -81,13 +81,16 @@ print(len(df_clear_sky_days_method_2))
 df_export = pd.concat([df_max_abs_change_in_irr, df_95th_percentile_abs_change_in_irr, df_99th_percentile_abs_change_in_irr], axis=1)
 df_export.to_csv('F:/irradiance_data/1_min_solar/adelaide/2020_adelaide_irradiance_summary_statistics_for_clear_sky_day_analysis.csv')
 
+
+
 # ------------------------------------- Plotting
 # Plot the min irradiance
 fig, ax = plt.subplots()
-ax.plot(df['min_1s_global_irr'], c='purple')
-ax.plot(df['mean_1s_global_irr'], c='blue')
+ax.plot(df['min_1s_global_irr'], c='purple', label='Minimum 1s global irradiance over 1min (W/sq m)')
+ax.plot(df['mean_1s_global_irr'], c='blue', label='Mean global irradiance over 1min (W/sq m)')
 ax1 = ax.twinx()
 ax1.plot(df['change_in_irr'])
+ax.legend(loc='upper right')
 plt.show()
 
 # Plot the min irradiance for approx solar hours
@@ -104,3 +107,20 @@ ax1 = ax.twinx()
 ax1.plot(df_approx_solar_hours['change_in_irr'])
 plt.show()
 
+# TODO - currently this funcationality doesn't work and I don't know why
+# Plot the manually identified clear sky days
+clear_sky_manual_check = pd.Series(['1/01/2020','2/01/2020','6/01/2020','7/01/2020','8/01/2020','12/01/2020','13/01/2020',
+                          '14/01/2020','29/01/2020','30/01/2020','4/02/2020','5/02/2020','6/02/2020','10/02/2020',
+                          '11/02/2020','22/02/2020','9/03/2020','15/03/2020','25/03/2020','26/03/2020','9/04/2020',
+                          '13/04/2020','24/04/2020','15/05/2020','16/05/2020','17/05/2020','29/05/2020','5/06/2020',
+                          '10/06/2020','28/06/2020','29/06/2020','15/07/2020','16/07/2020','17/07/2020','23/07/2020',
+                          '25/07/2020'])
+# Filter
+df_clear_sky_days_manual = df[df['date'].isin(clear_sky_manual_check)]
+# Plot
+fig, ax = plt.subplots()
+ax.plot(df_clear_sky_days_manual['min_1s_global_irr'], c='purple')
+ax.plot(df_clear_sky_days_manual['mean_1s_global_irr'], c='blue')
+ax1 = ax.twinx()
+ax1.plot(df_clear_sky_days_manual['change_in_irr'])
+plt.show()
