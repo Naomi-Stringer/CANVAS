@@ -1,4 +1,4 @@
-# Combines analysis across 24 days of data
+# Combines analysis and produces charts across 24 days of data
 
 #------------------------ Step 0: Import required packages ------------------------
 # Import packages required for program
@@ -22,9 +22,7 @@ import plotly.express as px
 from matplotlib import cm
 from matplotlib.pyplot import figure
 import statsmodels.api as sm
-from patsy import dmatrices
 
-import solar_analytics
 import util
 
 import matplotlib.pylab as pylab
