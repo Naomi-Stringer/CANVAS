@@ -23,7 +23,7 @@ Executed in Python. Requires the output from step 1. Uses simple mathematical ex
 ## 3. Estimating curtailed PV generation *on clear sky days* (iterative polyfit method)
 
 Executed in python. Requires the output from step 2. **Requires clear sky days to generate sensible outputs.**
-Iteratively fits a polynomial to the PV profile to estimate clear sky output. Then estimates curtailed generation. See script:
+Iteratively fits a polynomial to the PV profile to estimate clear sky output. Then estimates curtailed generation. Identifies cases where the straight line method may be preferable and flags these cases. **_However is not designed to handle a data set that includes non-clear sky days._** See script:
 
 * voltage_curtail_clear_sky_days.py
 
