@@ -40,7 +40,11 @@ for DATA_DATE in data_date_list:
 
     load_list = ['ac_load_net', 'ac_load']
     pv_list = ['pv_site_net', 'pv_site', 'pv_inverter_net']
-    load_list_extended = ['ac_load', 'ac_load_net', 'battery_storage', 'load_air_conditioner', 'load_common_area', 'load_ev_charger', 'load_garage', 'load_generator', 'load_hot_water', 'load_hot_water_solar', 'load_kitchen', 'load_laundry', 'load_lighting', 'load_machine', 'load_office', 'load_other', 'load_pool', 'load_powerpoint', 'load_refrigerator', 'load_shed', 'load_spa', 'load_stove', 'load_studio', 'load_subboard', 'load_tenant', 'load_washer']
+    load_list_extended = ['ac_load', 'ac_load_net', 'battery_storage', 'load_air_conditioner', 'load_common_area',
+                          'load_ev_charger', 'load_garage', 'load_generator', 'load_hot_water', 'load_hot_water_solar',
+                          'load_kitchen', 'load_laundry', 'load_lighting', 'load_machine', 'load_office', 'load_other',
+                          'load_pool', 'load_powerpoint', 'load_refrigerator', 'load_shed', 'load_spa', 'load_stove',
+                          'load_studio', 'load_subboard', 'load_tenant', 'load_washer']
 
     # Approx capacity factor value considered to be 'zero', e.g. less than 1% CF is zero.
     CF_ZERO_APPROX = 0.01
