@@ -47,7 +47,8 @@ df['date_time'] = pd.to_datetime(df[["year","month","day","hour","minute"]])
 
 # Set index to date_time and filter VERY ROUGHLY for solar hours
 # TODO would be great to instead find start and end pts for ecah day and filter for about an hour 'inside' this range,
-#  see prevoius attempts on 23 March 2021
+#  see prevoius attempts on 23 March 2021.
+#  OR try using Astral package to get sunrise/set times: https://astral.readthedocs.io/en/latest/index.html
 df = df.set_index('date_time')
 df_approx_solar_hours = df.between_time('07:00', '17:00')
 
