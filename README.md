@@ -29,7 +29,7 @@ Iteratively fits a polynomial to the PV profile to estimate clear sky output. Th
 
 ## 4. Plotting findings
 
-Executed in python. Requires the output from stpe 3. Plots various findings including some parts of the method (refer to paper). See scripts:
+Executed in python. Requires the output from step 3. Plots various findings including some parts of the method (refer to paper). See scripts:
 
 * voltage_curtail_combined_analyis.py
 * util.py
