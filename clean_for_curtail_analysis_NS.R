@@ -32,21 +32,23 @@ source("data_cleaning_functions.R")
 # source("documentation.R")
 # source("ideal_response_functions.R")
 
+setwd("F:/CANVAS")
+
 # Adding a for loop to do analysis for all 24 days of data
 # data_date_list <- c("2018-01-16", "2018-01-19", "2018-02-02", "2018-02-04", "2018-03-09", "2018-03-31", 
 #                     "2018-04-19", "2018-04-29", "2018-05-13", "2018-05-25", "2018-06-03", "2018-06-27", 
 #                     "2018-07-10", "2018-07-18", "2018-08-22", "2018-08-25", "2018-09-04", "2018-09-10", 
 #                     "2018-10-21", "2018-10-26", "2018-11-16", "2018-11-30", "2018-12-23", "2018-12-25")
 
-data_date_list <- c("2018-12-25")
+data_date_list <- c("2018-01-16")
 
 for (data_date in data_date_list){
   
   # Get input from GUI
   #data_date = "2018-12-25"
-  time_series_file <- paste("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/", data_date, ".csv", sep='')
-  circuit_details_file <- "F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/circuit_details.csv"
-  site_details_file <- "F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/site_details_renamed.csv"
+  time_series_file <- paste("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/00_Raw_data/", data_date, ".csv", sep='')
+  circuit_details_file <- "F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/00_Raw_data/circuit_details.csv"
+  site_details_file <- "F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/00_Raw_data/site_details_renamed.csv"
   # #25th August data
   # time_series_file <- paste("F:/05_Solar_Analytics/2018-09-12_solar_analytics_transfer_to_aemo/2018-05-25_sa_qld_fault_aemo.csv", sep='')
   # circuit_details_file <- "F:/05_Solar_Analytics/2018-09-12_solar_analytics_transfer_to_aemo/circuit_details.csv"
@@ -152,10 +154,10 @@ for (data_date in data_date_list){
   print('yay')
   
   # Export csv
-  path_out = "F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/"
-  write.csv(combined_data, paste(path_out,data_date,'_cleaned_TEST_20_July_2020.csv',sep = ''), row.names=FALSE)
+  path_out = "F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/01_Cleaned_data/"
+  write.csv(combined_data, paste(path_out,data_date,'_cleaned_TEST_24_May_2021.csv',sep = ''), row.names=FALSE)
   
   # Also export circuit_details_for_editing which contains helpful stuff like energy_day and sunrise/sunset times
-  write.csv(circuit_details_for_editing, paste(path_out, data_date, '_circuit_details_for_editing_cleaned_TEST_20_July_2020.csv', sep=""), row.names=FALSE)
+  write.csv(circuit_details_for_editing, paste(path_out, data_date, '_circuit_details_for_editing_cleaned_TEST_24_May_2021.csv', sep=""), row.names=FALSE)
     
 }
