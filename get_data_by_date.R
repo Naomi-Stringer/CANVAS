@@ -29,6 +29,13 @@ for (data_date in list_data_dates){
   
 }
 
+# Weirdly stopped at 26 Sep - had to run remaining days 'semi manually'
+# data_date <- "2019-09-30"
+# df_temp <- filter(df, date == data_date)
+# # Get date as a string for the file name then print to csv
+# data_date_name <- as.character(as.Date(data_date,format = "%Y-%m-%d", origin = "1970-01-01"))
+# write.csv(df_temp, paste(output_data_path, data_date_name, '.csv', sep=''), row.names=FALSE)
+
 
 
   
