@@ -17,23 +17,23 @@ import util
 # Inputs
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # 24 days for curtail analysis
-# DATA_DATE = '2018-01-16'
-data_date_list = ["2018-01-16", "2018-01-19", "2018-02-02", "2018-02-04", "2018-03-09", "2018-03-31", 
-                    "2018-04-19", "2018-04-29", "2018-05-13", "2018-05-25", "2018-06-03", "2018-06-27", 
-                    "2018-07-10", "2018-07-18", "2018-08-22", "2018-08-25", "2018-09-04", "2018-09-10", 
-                    "2018-10-21", "2018-10-26", "2018-11-16", "2018-11-30", "2018-12-23", "2018-12-25"]
+data_date_list = ['2018-01-16']
+# data_date_list = ["2018-01-16", "2018-01-19", "2018-02-02", "2018-02-04", "2018-03-09", "2018-03-31",
+#                     "2018-04-19", "2018-04-29", "2018-05-13", "2018-05-25", "2018-06-03", "2018-06-27",
+#                     "2018-07-10", "2018-07-18", "2018-08-22", "2018-08-25", "2018-09-04", "2018-09-10",
+#                     "2018-10-21", "2018-10-26", "2018-11-16", "2018-11-30", "2018-12-23", "2018-12-25"]
 
-TS_DATA_FILE_NAME_FULL = "_analysis_profiles_FULL_DETAIL_v4.csv"
-TS_DATA_FILE_NAME = "_analysis_profiles_v4.csv"
-SUM_STATS_DATA_FILE_NAME = "_analysis_sum_stats_v4.csv"
+TS_DATA_FILE_NAME_FULL = "_analysis_profiles_FULL_DETAIL_v4_TEST.csv"
+TS_DATA_FILE_NAME = "_analysis_profiles_v4_TEST.csv"
+SUM_STATS_DATA_FILE_NAME = "_analysis_sum_stats_v4_TEST.csv"
 
 print(data_date_list)
 
 for DATA_DATE in data_date_list:
 
     # With external cleaning
-    COMBINED_DATA_FILE_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/' + DATA_DATE + '_cleaned.csv'
-    CIRCUIT_DETAILS_FOR_EDITING_FILE_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/' + DATA_DATE + '_circuit_details_for_editing.csv'
+    COMBINED_DATA_FILE_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/01_Cleaned_data/' + DATA_DATE + '_cleaned.csv'
+    CIRCUIT_DETAILS_FOR_EDITING_FILE_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/01_Cleaned_data/' + DATA_DATE + '_circuit_details_for_editing.csv'
 
     # Error flags
     ERROR_FLAGS_DATA_PATH = 'Use solar analytics polarity'
