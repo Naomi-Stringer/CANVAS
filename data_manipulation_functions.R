@@ -26,7 +26,7 @@ process_raw_time_series_data <- function(time_series_data){
   time_series_data <- mutate(time_series_data, e = as.numeric(e))
   time_series_data <- mutate(time_series_data, v = as.numeric(v))
   time_series_data <- get_time_offsets(time_series_data)
-  processed_time_series_data <- mutate(time_series_data, f = as.numeric(f))
+  processed_time_series_data <- mutate(time_series_data, q = as.numeric(reactive_power))
   return(processed_time_series_data)
 }
 

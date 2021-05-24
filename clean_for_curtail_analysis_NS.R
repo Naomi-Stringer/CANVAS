@@ -23,14 +23,7 @@ library(geosphere)
 library(swfscMisc)
 library(padr)
 source("data_manipulation_functions.R")
-# source("aggregate_functions.R")
-# source("upscale_function.R")
 source("data_cleaning_functions.R")
-# source("normalised_power_function.R")
-# source("response_categorisation_function.R")
-# source("distance_from_event.R")
-# source("documentation.R")
-# source("ideal_response_functions.R")
 
 setwd("F:/CANVAS")
 
@@ -40,8 +33,8 @@ data_date_list <- c("2019-09-01", "2019-09-02", "2019-09-03", "2019-09-04", "201
                     "2019-09-13", "2019-09-14", "2019-09-15", "2019-09-16", "2019-09-16", "2019-09-17",
                     "2019-09-19", "2019-09-20", "2019-09-21", "2019-09-22", "2019-09-23", "2019-09-24",
                     "2019-09-25", "2019-09-26", "2019-09-27", "2019-09-28", "2019-09-29", "2019-09-30")
-# For testing
-data_date_list <- c("2019-09-01")
+# # For testing
+# data_date_list <- c("2019-09-01")
 
 for (data_date in data_date_list){
   
@@ -55,6 +48,7 @@ for (data_date in data_date_list){
   # Clicked. 
   duration_options <- c("5", "30", "60")
   ts_data <- read.csv(file=time_series_file, header=TRUE, stringsAsFactors = FALSE)
+  
   # Drop ts and date columns (added when separating the data into individual date files)
   ts_data <- select(ts_data, c_id, utc_tstamp, energy, power, reactive_power, voltage, duration)
 
@@ -64,7 +58,7 @@ for (data_date in data_date_list){
   if ('voltage' %in% colnames(ts_data)) {ts_data <- setnames(ts_data, c("voltage"), c("v"))}
   if ('vrms' %in% colnames(ts_data)) {ts_data <- setnames(ts_data, c("vrms"), c("v"))}
   if ('voltage_max' %in% colnames(ts_data)) {ts_data <- setnames(ts_data, c("voltage_max"), c("v"))}
-  if ('frequency' %in% colnames(ts_data)) {ts_data <- setnames(ts_data, c("frequency"), c("f"))}
+  if ('reactive_power' %in% colnames(ts_data)) {ts_data <- setnames(ts_data, c("reactive_power"), c("reactive_power"))}
   if ('energy' %in% colnames(ts_data)) {ts_data <- setnames(ts_data, c("energy"), c("e"))}
   if ('duration' %in% colnames(ts_data)) {ts_data <- setnames(ts_data, c("duration"), c("d"))}
   time_series_data <- ts_data
@@ -84,9 +78,11 @@ for (data_date in data_date_list){
   
   # Load site details data.
   sd_data <- read.csv(file=site_details_file, header=TRUE, stringsAsFactors = FALSE)
+  # Add s_state column to avoid errors
+  sd_data$s_state <- "SA"
   if ('State' %in% colnames(sd_data)) {sd_data <- setnames(sd_data, c("State"), c("s_state"))}
-  if ('ac_rating_w'%in% colnames(sd_data)) {sd_data <- mutate(sd_data, ac_rating_w = ac_rating_w/1000)}
-  if ('ac_rating_w'%in% colnames(sd_data)) {sd_data <- setnames(sd_data, c("ac_rating_w"), c("ac"))}
+  if ('ac_cap_w'%in% colnames(sd_data)) {sd_data <- mutate(sd_data, ac_cap_w = ac_cap_w/1000)}
+  if ('ac_cap_w'%in% colnames(sd_data)) {sd_data <- setnames(sd_data, c("ac_cap_w"), c("ac"))}
   if ('dc_cap_w' %in% colnames(sd_data)) {sd_data <- mutate(sd_data, dc_cap_w = dc_cap_w/1000)}
   if ('dc_cap_w' %in% colnames(sd_data)) {sd_data <- setnames(sd_data, c("dc_cap_w"), c("dc"))}
   if ('AC.Rating.kW.' %in% colnames(sd_data)) {sd_data <- setnames(sd_data, c("AC.Rating.kW."), c("ac"))}
@@ -118,7 +114,7 @@ for (data_date in data_date_list){
   # Get the number of sites at this stage. Note, this should be the same as for completely uncleaned data.
   
   combined_data <- combined_data %>% mutate(clean="raw")
-  combined_data <- select(combined_data, c_id, ts, v, f, d, site_id, e, con_type, s_state, s_postcode, 
+  combined_data <- select(combined_data, c_id, ts, v, d, site_id, e, con_type, s_state, s_postcode, 
                           Standard_Version, Grouping, polarity, first_ac,power_kW, reactive_power, clean, manufacturer, model, 
                           sum_ac, time_offset)
         
@@ -130,7 +126,7 @@ for (data_date in data_date_list){
   # Also need to get a new version of combined_data as an input to clean_connection_types to ensure the first_ac is in kW (not W)
   combined_data_clean_site_details <- combine_data_tables(time_series_data, circuit_details, site_details_cleaned_processed)
   combined_data_clean_site_details <- combined_data_clean_site_details %>% mutate(clean="raw")
-  combined_data_clean_site_details <- select(combined_data_clean_site_details, c_id, ts, v, f, d, site_id, e, con_type, s_state, s_postcode, 
+  combined_data_clean_site_details <- select(combined_data_clean_site_details, c_id, ts, v, d, site_id, e, con_type, s_state, s_postcode, 
                           Standard_Version, Grouping, polarity, first_ac,power_kW, reactive_power, clean, manufacturer, model, 
                           sum_ac, time_offset)
   # Clean circuit details file
@@ -142,7 +138,7 @@ for (data_date in data_date_list){
   remove(time_series_data)
   combined_data <- filter(combined_data, clean=="raw")
   combined_data_after_clean <- combined_data_after_clean %>% mutate(clean="cleaned")
-  combined_data_after_clean <- select(combined_data_after_clean, c_id, ts, v, f, d, site_id, e, con_type,
+  combined_data_after_clean <- select(combined_data_after_clean, c_id, ts, v, d, site_id, e, con_type,
                                       s_state, s_postcode, Standard_Version, Grouping, polarity, first_ac,
                                       power_kW, reactive_power, clean, manufacturer, model, sum_ac, time_offset)
   combined_data <- rbind(combined_data, combined_data_after_clean)
