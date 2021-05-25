@@ -4,6 +4,9 @@ library(dplyr)
 library(fasttime)
 library(lubridate)
 
+library(ggplot2)
+library(plotly)
+
 setwd("F:/CANVAS")
 input_data_path <- "F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/00_Raw_data/processed_unsw_201909_data_raw.csv"
 output_data_path <- "F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/00_Raw_data/"
@@ -13,7 +16,8 @@ df <- read.csv(input_data_path)
 
 # Fix timezones
 df <- mutate(df, ts = fastPOSIXct(utc_tstamp, tz="Australia/Brisbane"))
-df$date <- as.Date(df$ts)
+
+df$date <- as.Date(df$ts, tz="Australia/Brisbane")
 df <- df[order(df$ts),]
 
 # Get list of unique data dates
@@ -36,6 +40,10 @@ for (data_date in list_data_dates){
 # data_date_name <- as.character(as.Date(data_date,format = "%Y-%m-%d", origin = "1970-01-01"))
 # write.csv(df_temp, paste(output_data_path, data_date_name, '.csv', sep=''), row.names=FALSE)
 
-
+# Open data single day, filter for first c_id and plot
+circuit_check <- read.csv("F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/00_Raw_data/2019-09-03.csv")
+circuit <- 923664764
+circuit_check <- filter(circuit_check, c_id == circuit)
+write.csv(circuit_check, paste(output_data_path, '460511237.csv', sep=''))
 
   

@@ -4,78 +4,75 @@
 # Import packages required for program
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import calendar
-import seaborn as sns
-import itertools
-import datetime
-from time import gmtime, strftime
 
 import util
 
 # Inputs
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# 24 days for curtail analysis
-data_date_list = ['2018-01-16']
-DATA_DATE = data_date_list[0]
-# data_date_list = ["2018-01-16", "2018-01-19", "2018-02-02", "2018-02-04", "2018-03-09", "2018-03-31",
-#                     "2018-04-19", "2018-04-29", "2018-05-13", "2018-05-25", "2018-06-03", "2018-06-27",
-#                     "2018-07-10", "2018-07-18", "2018-08-22", "2018-08-25", "2018-09-04", "2018-09-10",
-#                     "2018-10-21", "2018-10-26", "2018-11-16", "2018-11-30", "2018-12-23", "2018-12-25"]
+# Pass a list of dates contained in the dataset
+# # TODO - Temporary for testing:
+# data_date_list = ["2019-09-03"]
+# DATA_DATE = data_date_list[0]
+data_date_list = ["2019-09-01", "2019-09-02", "2019-09-03", "2019-09-04", "2019-09-05", "2019-09-06",
+                  "2019-09-07", "2019-09-08", "2019-09-09", "2019-09-10", "2019-09-11", "2019-09-12",
+                  "2019-09-13", "2019-09-14", "2019-09-15", "2019-09-16", "2019-09-17", "2019-09-18",
+                  "2019-09-19", "2019-09-20", "2019-09-21", "2019-09-22", "2019-09-23", "2019-09-24",
+                  "2019-09-25", "2019-09-26", "2019-09-27", "2019-09-28", "2019-09-29", "2019-09-30"]
 
-TS_DATA_FILE_NAME_FULL = "_analysis_profiles_FULL_DETAIL_v4_TEST.csv"
-TS_DATA_FILE_NAME = "_analysis_profiles_v4_TEST.csv"
-SUM_STATS_DATA_FILE_NAME = "_analysis_sum_stats_v4_TEST.csv"
+# Input/output file locations
+INPUT_DATA_FOLDER_PATH = 'F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/01_Cleaned_data/'
+OUTPUT_DATA_FOLDER_PATH = 'F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/02_Curtail_output/'
 
-print(data_date_list)
+# Output file names
+TS_DATA_FILE_NAME_FULL = "_analysis_profiles_FULL_DETAIL_v4.csv"
+TS_DATA_FILE_NAME = "_analysis_profiles_v4.csv"
+SUM_STATS_DATA_FILE_NAME = "_analysis_sum_stats_v4.csv"
 
+# List of connection types for filtering
+load_list = ['ac_load_net', 'ac_load']
+pv_list = ['pv_site_net', 'pv_site', 'pv_inverter_net']
+load_list_extended = ['ac_load', 'ac_load_net', 'battery_storage', 'load_air_conditioner', 'load_common_area',
+                      'load_ev_charger', 'load_garage', 'load_generator', 'load_hot_water', 'load_hot_water_solar',
+                      'load_kitchen', 'load_laundry', 'load_lighting', 'load_machine', 'load_office', 'load_other',
+                      'load_pool', 'load_powerpoint', 'load_refrigerator', 'load_shed', 'load_spa', 'load_stove',
+                      'load_studio', 'load_subboard', 'load_tenant', 'load_washer']
+
+# Approx capacity factor value considered to be 'zero', e.g. less than 1% CF is zero.
+CF_ZERO_APPROX = 0.01
+# Approx cf derivative at which considered to be 'ramp'. That is, for at least a 10% change in capacity factor (ABSOLUTE!) expect to be ramping up or down.
+# Note, only applied 'next to' zeros. So should not capture shading effects.
+FIRST_DERIV_FALL_LIMIT = -0.05
+FIRST_DERIV_INCREASE_LIMIT = 0.05
+# For missing data check
+ALLOWED_MISSING_DATA_PERCENTAGE = 0.05
+# Average percentage of capacity at which a system must operate over the course of the day in order to be included in analysis
+VERY_LOW_OUTPUT_AVE_PERCENTAGE_CAPACITY = 0.05
+
+# Function for getting cumulative count of 0 with resent on 1
+def rcount(a):
+    without_reset = (a == 0).cumsum()
+    reset_at = (a == 1)
+    overcount = np.maximum.accumulate(without_reset * reset_at)
+    result = without_reset - overcount
+    return result
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+# Step through each date in turn
 for DATA_DATE in data_date_list:
 
-    # With external cleaning
-    COMBINED_DATA_FILE_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/01_Cleaned_data/' + DATA_DATE + '_cleaned.csv'
-    CIRCUIT_DETAILS_FOR_EDITING_FILE_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/01_Cleaned_data/' + DATA_DATE + '_circuit_details_for_editing.csv'
-
-    # Error flags
-    ERROR_FLAGS_DATA_PATH = 'Use solar analytics polarity'
-
-    load_list = ['ac_load_net', 'ac_load']
-    pv_list = ['pv_site_net', 'pv_site', 'pv_inverter_net']
-    load_list_extended = ['ac_load', 'ac_load_net', 'battery_storage', 'load_air_conditioner', 'load_common_area',
-                          'load_ev_charger', 'load_garage', 'load_generator', 'load_hot_water', 'load_hot_water_solar',
-                          'load_kitchen', 'load_laundry', 'load_lighting', 'load_machine', 'load_office', 'load_other',
-                          'load_pool', 'load_powerpoint', 'load_refrigerator', 'load_shed', 'load_spa', 'load_stove',
-                          'load_studio', 'load_subboard', 'load_tenant', 'load_washer']
-
-    # Approx capacity factor value considered to be 'zero', e.g. less than 1% CF is zero.
-    CF_ZERO_APPROX = 0.01
-    # Approx cf derivative at which considered to be 'ramp'. That is, for at least a 10% change in capacity factor (ABSOLUTE!) expect to be ramping up or down.
-    # Note, only applied 'next to' zeros. So should not capture shading effects.
-    FIRST_DERIV_FALL_LIMIT = -0.05
-    FIRST_DERIV_INCREASE_LIMIT = 0.05
-    # For missing data check
-    ALLOWED_MISSING_DATA_PERCENTAGE = 0.05
-    # Average percentage of capacity at which a system must operate over the course of the day in order to be included in analysis
-    VERY_LOW_OUTPUT_AVE_PERCENTAGE_CAPACITY = 0.05
-
-    # Function for getting cumulative count of 0 with resent on 1
-    def rcount(a):
-        without_reset = (a == 0).cumsum()
-        reset_at = (a == 1)
-        overcount = np.maximum.accumulate(without_reset * reset_at)
-        result = without_reset - overcount
-        return result
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # Get data file paths using for this date
+    cleaned_data_file_path = INPUT_DATA_FOLDER_PATH + DATA_DATE + '_cleaned.csv'
+    circuit_details_file_path = INPUT_DATA_FOLDER_PATH + DATA_DATE + '_circuit_details_for_editing_cleaned.csv'
 
     # Get data
-    unaltered_data = pd.read_csv(COMBINED_DATA_FILE_PATH, index_col = 'ts', parse_dates=True )
+    unaltered_data = pd.read_csv(cleaned_data_file_path, index_col = 'ts', parse_dates=True )
 
-    # TODO - temporarily just look at 10 circuits
-    list_site_ids_temp = [619670601, 878260256, 1550447108, 551209548, 1077090264,
-                          312070023, 159652233, 626841014, 1921278880, 131661938,
-                          709802118, 709293864, 2147340852]
-    unaltered_data = unaltered_data[unaltered_data['site_id'].isin(list_site_ids_temp)]
-    print(len(unaltered_data))
+    # # TODO - temporarily just look at 10 circuits
+    # list_site_ids_temp = unaltered_data['site_id'].drop_duplicates().tolist()
+    # list_site_ids_temp = list_site_ids_temp[:100]
+    # unaltered_data = unaltered_data[unaltered_data['site_id'].isin(list_site_ids_temp)]
+    # print(len(unaltered_data))
+    # # unaltered_data.to_csv(OUTPUT_DATA_FOLDER_PATH+"test_profiles_and_timestamps.csv")
 
     # rename energy column
     unaltered_data = unaltered_data.rename(columns = {'e' : 'energy', 'd':'duration', 'sum_ac':'ac'})
@@ -124,7 +121,7 @@ for DATA_DATE in data_date_list:
     unaltered_data = unaltered_data.rename(columns={'duration_y': 'duration'})
 
     # Open _circuit_details_for_editing.csv file for sunrise/set times
-    assist_df = pd.read_csv(CIRCUIT_DETAILS_FOR_EDITING_FILE_PATH)
+    assist_df = pd.read_csv(circuit_details_file_path)
 
     # Check for PV sites with very low output and remove them
     get_site_ac_df = unaltered_data[['site_id', 'first_ac', 'ac']]
@@ -133,12 +130,6 @@ for DATA_DATE in data_date_list:
     assist_df = assist_df.merge(get_site_ac_df, left_on='site_id', right_on='site_id', how='right')
 
     # Check whether c_ids operated at less than an average of 5% capacity
-
-    # ******************************************
-    # ******************************************
-    # ******************************************
-    # ******************************************
-    # ******************************************
     # Compare using max power output compared with first_ac.
     max_p_df = pd.DataFrame({'max_p_kW': unaltered_data.groupby('c_id')['power_kW'].max(), 'first_ac' : unaltered_data.groupby('c_id')['first_ac'].first()})
     max_p_df['low_output_flag'] = np.nan
@@ -151,11 +142,6 @@ for DATA_DATE in data_date_list:
     c_ids_to_WITHOUT_low_output = c_ids_to_WITHOUT_low_output['c_id'].tolist()
     # print(max_p_df)
     print(len(c_ids_to_WITHOUT_low_output))
-    # ******************************************
-    # ******************************************
-    # ******************************************
-    # ******************************************
-    # ******************************************
 
     # Report the number of c_ids dropped.
     print("The number of c_ids excluded due to max output < first_ac * " + str(VERY_LOW_OUTPUT_AVE_PERCENTAGE_CAPACITY)+ ":")
@@ -176,7 +162,7 @@ for DATA_DATE in data_date_list:
     output_df = pd.DataFrame()
     output_df.index.name = 't_stamp'
 
-    # Loop
+    # Loop through c_ids
     for c_id in c_id_list:
 
         # Get data for c_id
@@ -406,30 +392,15 @@ for DATA_DATE in data_date_list:
     output_df['gen_kWh'] = output_df['power_kW'] * output_df['duration']/(60*60)
 
     # Optional save data to csv
-    output_df.to_csv("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/" + DATA_DATE + TS_DATA_FILE_NAME_FULL)
+    output_df.to_csv(OUTPUT_DATA_FOLDER_PATH + DATA_DATE + TS_DATA_FILE_NAME_FULL)
 
     # Clean output_df before exporting to csv
     output_df_to_export = output_df[['ac','c_id','cf','clean','con_type','duration','energy','est_cf','est_kW',
-                                     'est_kWh','f','first_ac','gen_kWh','gen_loss_est_kWh','Grouping','manufacturer',
+                                     'est_kWh','reactive_power','first_ac','gen_kWh','gen_loss_est_kWh','Grouping','manufacturer',
                                      'model','power_kW','s_postcode','s_state','site_id','Standard_Version','v',
                                      'zero_flag', 'time_in_seconds']]
     # Optional save data to csv
-    output_df_to_export.to_csv("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/" + DATA_DATE + TS_DATA_FILE_NAME)
-
-    # output_df['t_stamp_copy'] = output_df.index
-    # import matplotlib.dates as mdates
-    # time_fmt = mdates.DateFormatter('%H:%M')
-    # fig, ax = plt.subplots()
-    # ax.plot(output_df["t_stamp_copy"], output_df["cf"], '-o', markersize=2, linewidth=1, c='g')
-    # ax.plot(output_df["t_stamp_copy"], output_df["est_cf"], '-o', markersize=2, linewidth=1, c='r')
-    # # ax1 = ax.twinx()
-    # # ax1.plot(pv_data["t_stamp_copy"], pv_data["v"], '-o', markersize=4, linewidth=1, c='b')
-    # plt.xlabel('Time')
-    # plt.ylabel('Normalised Power (kW/kWac)')
-    # ax.xaxis.set_major_formatter(time_fmt)
-    # fig.suptitle(str(c_id), fontsize=16)
-    # plt.show()
-
+    output_df_to_export.to_csv(OUTPUT_DATA_FOLDER_PATH + DATA_DATE + TS_DATA_FILE_NAME)
 
     # --------------------------------- Get summary stats
     # Get site_id list
@@ -498,4 +469,4 @@ for DATA_DATE in data_date_list:
     sum_stats_df['proportion_of_sites'] = (sum_stats_df['proportion_of_sites'] + 1) / len(sum_stats_df)
 
     # Optional save data to csv
-    sum_stats_df.to_csv("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/" + DATA_DATE + SUM_STATS_DATA_FILE_NAME)
+    sum_stats_df.to_csv(OUTPUT_DATA_FOLDER_PATH + DATA_DATE + SUM_STATS_DATA_FILE_NAME)
