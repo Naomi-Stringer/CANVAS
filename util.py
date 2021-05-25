@@ -17,6 +17,10 @@ from time import gmtime, strftime
 from matplotlib import cm
 
 
+# Questions regarding the below 'calculate_first_derivative_of_variable' function:
+# 1) How does the function deals when there is a jump between time-stamps when calculating derivatives between two adjacent entries. 
+#    Has this already been addressed previously and data comes with non-missing time-stamps?
+# 2) Does the function take interval differences into account between 30 sec vs. 60 sec monitored data as their derivative calcs would be different 
 def calculate_first_derivative_of_variable(input_df, col_name_string) :
     """Pass a df FOR A SINGLE C_ID (with 'power_kW' col!!!) Returns the same df with one new cols: power_kW_first_deriv."""
     # NOTE - blanks are just non existent in the df, so it effectively skips them (i.e. compared the value before and after the blanks, which should be okay generally... may be some problem cases.)
