@@ -18,6 +18,7 @@ import util
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # 24 days for curtail analysis
 data_date_list = ['2018-01-16']
+DATA_DATE = data_date_list[0]
 # data_date_list = ["2018-01-16", "2018-01-19", "2018-02-02", "2018-02-04", "2018-03-09", "2018-03-31",
 #                     "2018-04-19", "2018-04-29", "2018-05-13", "2018-05-25", "2018-06-03", "2018-06-27",
 #                     "2018-07-10", "2018-07-18", "2018-08-22", "2018-08-25", "2018-09-04", "2018-09-10",
@@ -68,6 +69,14 @@ for DATA_DATE in data_date_list:
 
     # Get data
     unaltered_data = pd.read_csv(COMBINED_DATA_FILE_PATH, index_col = 'ts', parse_dates=True )
+
+    # TODO - temporarily just look at 10 circuits
+    list_site_ids_temp = [619670601, 878260256, 1550447108, 551209548, 1077090264,
+                          312070023, 159652233, 626841014, 1921278880, 131661938,
+                          709802118, 709293864, 2147340852]
+    unaltered_data = unaltered_data[unaltered_data['site_id'].isin(list_site_ids_temp)]
+    print(len(unaltered_data))
+
     # rename energy column
     unaltered_data = unaltered_data.rename(columns = {'e' : 'energy', 'd':'duration', 'sum_ac':'ac'})
     # filter for clean
@@ -88,11 +97,11 @@ for DATA_DATE in data_date_list:
     # Check for missing data issues
     # Flag sites with too much missing data (based on threshold), need to also keep the duration
     missing_data_df = pd.DataFrame({'num_data_pts': unaltered_data.groupby('c_id')['energy'].count(), 'duration': unaltered_data.groupby('c_id')['duration'].first()}).reset_index()
-    # We now have two possible time intervals: 30s or 60s. 
+    # We now have two possible time intervals: 30s or 60s.
     # Therefore, we need to run twice?
     for time_interval in time_interval_list:
         # Expected number of time periods
-        num_time_periods = 24 * 60 * (60 / time_interval) 
+        num_time_periods = 24 * 60 * (60 / time_interval)
         # Get the minimum number of data points required in order to have enough data (i.e. not lots of missing data)
         missing_data_threshold = num_time_periods * (1 - ALLOWED_MISSING_DATA_PERCENTAGE)
         missing_data_df['missing_data_flag'] = np.nan
@@ -120,7 +129,7 @@ for DATA_DATE in data_date_list:
     # Check for PV sites with very low output and remove them
     get_site_ac_df = unaltered_data[['site_id', 'first_ac', 'ac']]
     get_site_ac_df = get_site_ac_df.drop_duplicates(subset='site_id')
-    # merge keeping only the site_ids in the time series df. 
+    # merge keeping only the site_ids in the time series df.
     assist_df = assist_df.merge(get_site_ac_df, left_on='site_id', right_on='site_id', how='right')
 
     # Check whether c_ids operated at less than an average of 5% capacity
@@ -178,7 +187,7 @@ for DATA_DATE in data_date_list:
         sun_rise = assist_df_c_id.loc[c_id,'sunrise']
         sun_rise = pd.to_datetime(sun_rise)
         sun_rise_hour = sun_rise.hour
-        sun_rise_min = sun_rise.minute   
+        sun_rise_min = sun_rise.minute
         if sun_rise_min <10 :
             sun_rise_min = '0' + str(sun_rise_min)
         else:
@@ -192,12 +201,12 @@ for DATA_DATE in data_date_list:
         if sun_set_min <10 :
             sun_set_min = '0' + str(sun_set_min)
         else:
-            sun_set_min = str(sun_set_min)   
+            sun_set_min = str(sun_set_min)
         sun_set_for_filter = str(sun_set_hour - 1) + ':' + sun_set_min + ':' + str(00)
 
         print(sun_rise_for_filter)
         print(sun_set_for_filter)
-        
+
         data = data.between_time(sun_rise_for_filter, sun_set_for_filter)
 
         # Calc CF
@@ -244,7 +253,7 @@ for DATA_DATE in data_date_list:
         # Next interval is zero flagged, current value is greater than 'zero' limit
         data.loc[(data['zero_flag'].shift(-1) == 1) & (data['cf'] > CF_ZERO_APPROX),'start_deriv_flag'] = 1
 
-        # Get the next instance of ramp down (well, previous) - repeat four times. Effectively means you can capture periods in which power falls over 5 time intervals (including initial one captured above) 
+        # Get the next instance of ramp down (well, previous) - repeat four times. Effectively means you can capture periods in which power falls over 5 time intervals (including initial one captured above)
         data.loc[(data['start_deriv_flag'].shift(-1) == 1) & (data['cf_first_deriv'] < FIRST_DERIV_FALL_LIMIT),'start_deriv_flag'] = 1
         data.loc[(data['start_deriv_flag'].shift(-1) == 1) & (data['cf_first_deriv'] < FIRST_DERIV_FALL_LIMIT),'start_deriv_flag'] = 1
         data.loc[(data['start_deriv_flag'].shift(-1) == 1) & (data['cf_first_deriv'] < FIRST_DERIV_FALL_LIMIT),'start_deriv_flag'] = 1
@@ -298,7 +307,7 @@ for DATA_DATE in data_date_list:
                     data.loc[data['time_in_seconds']==first_end_point, 'end_pts'] = 0
         except:
             print('looks like no start of end points for this site')
-            
+
         # Identify the start and end pt number (so they can be matched to each other)
         data['start_cumsum'] = data['start_pts'].cumsum()
         data['end_cumsum'] = data['end_pts'].cumsum()
@@ -319,19 +328,19 @@ for DATA_DATE in data_date_list:
         data = pd.concat([data,result], axis=1)
 
         # Flag 'estimate' period (i.e. between start and end pts)
-        data['est_period'] = data['start_cumsum'] - data['end_cumsum'] 
+        data['est_period'] = data['start_cumsum'] - data['end_cumsum']
 
         # --------------------------------- get start and end dfs, then get ramp df and merge onto data
         start_df = data[data['start_pts']==1]
         end_df = data[data['end_pts']==1]
-        
+
         # In cases where there are no events, need to 'try'
-        try: 
+        try:
             # Create new ramp_df.
-            # NOTE use +2 in the range in order to capture additional end points if the first end point occurs before the first start point. 
+            # NOTE use +2 in the range in order to capture additional end points if the first end point occurs before the first start point.
             # May make sense to even add a couple.. (i.e. +3 or +4) however this will do for now.
             count_start_pts = start_df['start_cumsum'].max()
-            ramp_df = pd.DataFrame(data=range(1,int(count_start_pts+2)), columns=['event_num'])
+            ramp_df = pd.DataFrame(data=list(range(1,int(count_start_pts+2))), columns=['event_num'])
 
             # Get data from dfs
             # Keep only cf, time_int and start_cumsum.
@@ -342,7 +351,7 @@ for DATA_DATE in data_date_list:
             ramp_df = ramp_df.rename(columns = {'cf' : 'start_cf'})
             ramp_df = ramp_df.rename(columns = {'time_in_seconds' : 'start_time_int'})
 
-            # Keep only cf, time)nt and start_cumsum. 
+            # Keep only cf, time)nt and start_cumsum.
             end_df = end_df[['cf', 'time_in_seconds', 'end_cumsum']]
             # Then merge on start_cumsum
             ramp_df = ramp_df.merge(end_df, left_on='event_num', right_on='end_cumsum')
@@ -350,7 +359,7 @@ for DATA_DATE in data_date_list:
             ramp_df = ramp_df.rename(columns = {'cf' : 'end_cf'})
             ramp_df = ramp_df.rename(columns = {'time_in_seconds' : 'end_time_int'})
 
-            # Check for cases where end time is BEFORE start time for an event. 
+            # Check for cases where end time is BEFORE start time for an event.
             # If this is the case, then delete that end time and shift all end times up by one.
             # Check each event from top to bottom
             num_events = ramp_df['event_num'].max()
@@ -406,7 +415,6 @@ for DATA_DATE in data_date_list:
                                      'zero_flag', 'time_in_seconds']]
     # Optional save data to csv
     output_df_to_export.to_csv("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/" + DATA_DATE + TS_DATA_FILE_NAME)
-
 
     # output_df['t_stamp_copy'] = output_df.index
     # import matplotlib.dates as mdates
