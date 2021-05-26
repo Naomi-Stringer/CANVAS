@@ -24,6 +24,10 @@ data_date_list = ["2019-09-01", "2019-09-02", "2019-09-03", "2019-09-04", "2019-
 INPUT_DATA_FOLDER_PATH = 'F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/01_Cleaned_data/'
 OUTPUT_DATA_FOLDER_PATH = 'F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/02_Curtail_output/'
 
+# CER and APVI data on PV penetration / installs
+PC_INSTALLS_DATA_FILE_PATH = 'F:/CANVAS/Postcode_data_for_small-scale installations-SGU-Solar.csv'
+DWELLINGS_DATA_FILE_PATH = 'F:/CANVAS/postcodes_4b8c.csv'
+
 # Output file names
 TS_DATA_FILE_NAME_FULL = "_analysis_profiles_FULL_DETAIL_v4.csv"
 TS_DATA_FILE_NAME = "_analysis_profiles_v4.csv"
@@ -62,13 +66,6 @@ for DATA_DATE in data_date_list:
 
     # Get data
     unaltered_data = pd.read_csv(cleaned_data_file_path, index_col = 'ts', parse_dates=True )
-
-    # # TODO - temporarily just look at 10 circuits
-    # list_site_ids_temp = unaltered_data['site_id'].drop_duplicates().tolist()
-    # list_site_ids_temp = list_site_ids_temp[:100]
-    # unaltered_data = unaltered_data[unaltered_data['site_id'].isin(list_site_ids_temp)]
-    # print(len(unaltered_data))
-    # # unaltered_data.to_csv(OUTPUT_DATA_FOLDER_PATH+"test_profiles_and_timestamps.csv")
 
     # rename energy column
     unaltered_data = unaltered_data.rename(columns = {'e' : 'energy', 'd':'duration', 'sum_ac':'ac'})
@@ -137,8 +134,6 @@ for DATA_DATE in data_date_list:
     # Get list of c_ids to be excluded
     c_ids_to_WITHOUT_low_output = max_p_df[max_p_df['low_output_flag'] != 1]
     c_ids_to_WITHOUT_low_output = c_ids_to_WITHOUT_low_output['c_id'].tolist()
-    # print(max_p_df)
-    print(len(c_ids_to_WITHOUT_low_output))
 
     # Report the number of c_ids dropped.
     # TODO - would be better to report this in a csv for all sites for each data date
@@ -188,9 +183,6 @@ for DATA_DATE in data_date_list:
         else:
             sun_set_min = str(sun_set_min)
         sun_set_for_filter = str(sun_set_hour - 1) + ':' + sun_set_min + ':' + str(00)
-
-        print(sun_rise_for_filter)
-        print(sun_set_for_filter)
 
         data = data.between_time(sun_rise_for_filter, sun_set_for_filter)
 
@@ -349,11 +341,7 @@ for DATA_DATE in data_date_list:
             # If this is the case, then delete that end time and shift all end times up by one.
             # Check each event from top to bottom
             num_events = ramp_df['event_num'].max()
-            # print(num_events)
             for i in range(0, int(num_events)):
-                # print(i)
-                # print(ramp_df.loc[i,'end_time_int'])
-                # print(ramp_df.loc[i,'start_time_int'])
                 if ramp_df.loc[i, 'end_time_int'] < ramp_df.loc[i, 'start_time_int']:
                     ramp_df['end_time_int'] = ramp_df['end_time_int'].shift(-1)
 
@@ -363,9 +351,7 @@ for DATA_DATE in data_date_list:
             # Drop end and start cumsum, then merge onto data
             ramp_df = ramp_df.drop(['end_cumsum', 'start_cumsum'], axis=1)
             zero_row_for_ramp_df = pd.DataFrame(data=[0], columns=['event_num'])
-            print(zero_row_for_ramp_df)
             ramp_df = pd.concat([ramp_df, zero_row_for_ramp_df])
-            print(ramp_df)
 
             data = data.reset_index().merge(ramp_df,  left_on='start_cumsum', right_on='event_num').set_index('t_stamp')
             # Calc estimated CF
@@ -433,7 +419,6 @@ for DATA_DATE in data_date_list:
 
     # Calc percentage of gen lost
     sum_stats_df['percentage_lost'] = sum_stats_df['gen_loss_est_kWh'].abs() / (sum_stats_df['gen_loss_est_kWh'].abs() + sum_stats_df['gen_kWh'].abs())
-    print(sum_stats_df)
 
     # Get voltage box plot statistics for both curtail times and non curtail times
     curtail_v_df = output_df[output_df['est_period'] == 1]
@@ -444,22 +429,19 @@ for DATA_DATE in data_date_list:
     # rename 'v' to 'curtail_v' in order to see which is which when added to sum_stats_df
     curtail_v_df = curtail_v_df.rename(columns = {'v' : 'v_curtail'})
     curtail_v_box_plot_stats_df = curtail_v_df.groupby('site_id').describe()
-    print(curtail_v_box_plot_stats_df)
     # Non curtail times
     all_other_v_df = all_other_v_df[['v','site_id']]
     # rename 'v' to 'other_v' in order to see which is which when added to sum_stats_df
     all_other_v_df = all_other_v_df.rename(columns = {'v' : 'v_all_other'})
     all_other_v_box_plot_stats_df = all_other_v_df.groupby('site_id').describe()
-    print(all_other_v_box_plot_stats_df)
 
     # add box plot stats onto summary stats
     sum_stats_df = pd.concat([sum_stats_df, curtail_v_box_plot_stats_df, all_other_v_box_plot_stats_df], axis=1)
 
-    PC_INSTALLS_DATA_FILE_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/Postcode_data_for_small-scale installations-SGU-Solar.csv'
-    DWELLINGS_DATA_FILE_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/postcodes_4b8c.csv'
-
     # Get penetration by postcode
     # TODO - need to update the CER and APVI data files to match the Solar Analytics data set period being analysed!
+    # TODO - could not locate the same type of APVI file (for dwellings) so may need to use the older data.
+    # TODO - the CER data will require some attention and util will have to be updated to make it accept the updated CER data.
     sum_stats_df = util.get_penetration_by_postcode(PC_INSTALLS_DATA_FILE_PATH, DWELLINGS_DATA_FILE_PATH, sum_stats_df, output_df)
 
     # Sort and get % of systems
