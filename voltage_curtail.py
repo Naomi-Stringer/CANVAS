@@ -1,4 +1,5 @@
 # Estimates volume of PV generation being curtailed due to over voltage
+# TODO - as discussed, scripts currently don't do any filtering based on voltage
 
 #------------------------ Step 0: Import required packages ------------------------
 # Import packages required for program
@@ -29,13 +30,7 @@ TS_DATA_FILE_NAME = "_analysis_profiles_v4.csv"
 SUM_STATS_DATA_FILE_NAME = "_analysis_sum_stats_v4.csv"
 
 # List of connection types for filtering
-load_list = ['ac_load_net', 'ac_load']
 pv_list = ['pv_site_net', 'pv_site', 'pv_inverter_net']
-load_list_extended = ['ac_load', 'ac_load_net', 'battery_storage', 'load_air_conditioner', 'load_common_area',
-                      'load_ev_charger', 'load_garage', 'load_generator', 'load_hot_water', 'load_hot_water_solar',
-                      'load_kitchen', 'load_laundry', 'load_lighting', 'load_machine', 'load_office', 'load_other',
-                      'load_pool', 'load_powerpoint', 'load_refrigerator', 'load_shed', 'load_spa', 'load_stove',
-                      'load_studio', 'load_subboard', 'load_tenant', 'load_washer']
 
 # Approx capacity factor value considered to be 'zero', e.g. less than 1% CF is zero.
 CF_ZERO_APPROX = 0.01
@@ -48,7 +43,7 @@ ALLOWED_MISSING_DATA_PERCENTAGE = 0.05
 # Average percentage of capacity at which a system must operate over the course of the day in order to be included in analysis
 VERY_LOW_OUTPUT_AVE_PERCENTAGE_CAPACITY = 0.05
 
-# Function for getting cumulative count of 0 with resent on 1
+# Function for getting cumulative count of 0 with reset on 1
 def rcount(a):
     without_reset = (a == 0).cumsum()
     reset_at = (a == 1)
@@ -57,10 +52,11 @@ def rcount(a):
     return result
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+# ********************* Date loop  *********************
 # Step through each date in turn
 for DATA_DATE in data_date_list:
 
-    # Get data file paths using for this date
+    # Get data file paths for this date
     cleaned_data_file_path = INPUT_DATA_FOLDER_PATH + DATA_DATE + '_cleaned.csv'
     circuit_details_file_path = INPUT_DATA_FOLDER_PATH + DATA_DATE + '_circuit_details_for_editing_cleaned.csv'
 
@@ -91,7 +87,9 @@ for DATA_DATE in data_date_list:
     # Get list of time_intervals
     time_interval_list = unaltered_data['duration'].drop_duplicates().tolist()
 
+    # ********************* Further data cleaning [START] *********************
     # Check for missing data issues
+    # TODO - this may not longer work since the Solar Analytics data can contain a mix of 60s and 5s data
     # Flag sites with too much missing data (based on threshold), need to also keep the duration
     missing_data_df = pd.DataFrame({'num_data_pts': unaltered_data.groupby('c_id')['energy'].count(), 'duration': unaltered_data.groupby('c_id')['duration'].first()}).reset_index()
     # We now have two possible time intervals: 30s or 60s.
@@ -136,7 +134,6 @@ for DATA_DATE in data_date_list:
     max_p_df.loc[max_p_df['max_p_kW'] < VERY_LOW_OUTPUT_AVE_PERCENTAGE_CAPACITY * max_p_df['first_ac'] , 'low_output_flag'] = 1
     # Copy c_ids to a column (from index)
     max_p_df['c_id'] = max_p_df.index
-    print(max_p_df.head())
     # Get list of c_ids to be excluded
     c_ids_to_WITHOUT_low_output = max_p_df[max_p_df['low_output_flag'] != 1]
     c_ids_to_WITHOUT_low_output = c_ids_to_WITHOUT_low_output['c_id'].tolist()
@@ -144,6 +141,7 @@ for DATA_DATE in data_date_list:
     print(len(c_ids_to_WITHOUT_low_output))
 
     # Report the number of c_ids dropped.
+    # TODO - would be better to report this in a csv for all sites for each data date
     print("The number of c_ids excluded due to max output < first_ac * " + str(VERY_LOW_OUTPUT_AVE_PERCENTAGE_CAPACITY)+ ":")
     print(len(max_p_df) - len(c_ids_to_WITHOUT_low_output))
     print("The total number of c_ids remaining is:")
@@ -151,10 +149,10 @@ for DATA_DATE in data_date_list:
 
     # Only keep sites that have enough output
     unaltered_data = unaltered_data[unaltered_data['c_id'].isin(c_ids_to_WITHOUT_low_output)]
+    # ********************* Further data cleaning [END] *********************
 
     # Get assist_df with c_id as index
     assist_df_c_id = assist_df.set_index('c_id')
-    print(assist_df_c_id)
 
     # Get c_id list
     c_id_list = unaltered_data['c_id'].drop_duplicates().tolist()
@@ -162,6 +160,7 @@ for DATA_DATE in data_date_list:
     output_df = pd.DataFrame()
     output_df.index.name = 't_stamp'
 
+    # ********************* Circuit id loop  *********************
     # Loop through c_ids
     for c_id in c_id_list:
 
@@ -203,6 +202,7 @@ for DATA_DATE in data_date_list:
         data['non_zero_flag_count'] = data['unaltered_zero_flag']
 
         # Remove cases where 'blip' occurs. e.g. above zero but only for a max of 2 time intervals.
+        # TODO - may be better to remove this step since we are also looking at non-clear sky days!
         # First, count the non zeros
         a = data['non_zero_flag_count']
         # Now remove from data
@@ -459,6 +459,7 @@ for DATA_DATE in data_date_list:
     DWELLINGS_DATA_FILE_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/postcodes_4b8c.csv'
 
     # Get penetration by postcode
+    # TODO - need to update the CER and APVI data files to match the Solar Analytics data set period being analysed!
     sum_stats_df = util.get_penetration_by_postcode(PC_INSTALLS_DATA_FILE_PATH, DWELLINGS_DATA_FILE_PATH, sum_stats_df, output_df)
 
     # Sort and get % of systems
