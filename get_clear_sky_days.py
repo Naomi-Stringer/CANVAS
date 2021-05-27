@@ -12,13 +12,19 @@ import numpy as np
 # def get_clear_sky_days()
 
 # Get first month of data
-df = pd.read_csv('F:/irradiance_data/1_min_solar/adelaide/sl_023034_2020_01.txt')
+# df = pd.read_csv('F:/irradiance_data/1_min_solar/adelaide/sl_023034_2020_01.txt')
+# 2019 data
+df = pd.read_csv('F:/irradiance_data/1_min_solar/adelaide/sl_023034_2019_01.txt')
 
 # List rest of months
-list=['02','03','04','05','06','07']
+# list=['02','03','04','05','06','07']
+# 2019
+list=['02','03','04','05','06','07', '08', '09', '10', '11', '12']
 # Concat on rest of months
 for i in list:
-    df_temp = pd.read_csv('F:/irradiance_data/1_min_solar/adelaide/sl_023034_2020_'+i+'.txt')
+    # df_temp = pd.read_csv('F:/irradiance_data/1_min_solar/adelaide/sl_023034_2020_'+i+'.txt')
+    # 2019
+    df_temp = pd.read_csv('F:/irradiance_data/1_min_solar/adelaide/sl_023034_2019_'+i+'.txt')
     df = pd.concat([df, df_temp])
 
 # Make sure numeric
@@ -80,8 +86,9 @@ print(len(df_clear_sky_days_method_2))
 
 # ------------------------------------- Export by date
 df_export = pd.concat([df_max_abs_change_in_irr, df_95th_percentile_abs_change_in_irr, df_99th_percentile_abs_change_in_irr], axis=1)
-df_export.to_csv('F:/irradiance_data/1_min_solar/adelaide/2020_adelaide_irradiance_summary_statistics_for_clear_sky_day_analysis.csv')
-
+# df_export.to_csv('F:/irradiance_data/1_min_solar/adelaide/2020_adelaide_irradiance_summary_statistics_for_clear_sky_day_analysis.csv')
+# 2019
+df_export.to_csv('F:/irradiance_data/1_min_solar/adelaide/2019_adelaide_irradiance_summary_statistics_for_clear_sky_day_analysis.csv')
 
 
 # ------------------------------------- Plotting
