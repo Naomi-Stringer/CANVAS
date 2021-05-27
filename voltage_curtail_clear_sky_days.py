@@ -17,18 +17,19 @@ time_fmt = mdates.DateFormatter('%H:%M')
 
 # Inputs
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-data_date_list = ["2018-01-16", "2018-01-19", "2018-02-02", "2018-02-04", "2018-03-09", "2018-03-31",
-                    "2018-04-19", "2018-04-29", "2018-05-13", "2018-05-25", "2018-06-03", "2018-06-27",
-                    "2018-07-10", "2018-07-18", "2018-08-22", "2018-08-25", "2018-09-04", "2018-09-10",
-                    "2018-10-21", "2018-10-26", "2018-11-16", "2018-11-30", "2018-12-23", "2018-12-25"]
+data_date_list = ["2019-09-01", "2019-09-02", "2019-09-03", "2019-09-04", "2019-09-05", "2019-09-06",
+                  "2019-09-07", "2019-09-08", "2019-09-09", "2019-09-10", "2019-09-11", "2019-09-12",
+                  "2019-09-13", "2019-09-14", "2019-09-15", "2019-09-16", "2019-09-17", "2019-09-18",
+                  "2019-09-19", "2019-09-20", "2019-09-21", "2019-09-22", "2019-09-23", "2019-09-24",
+                  "2019-09-25", "2019-09-26", "2019-09-27", "2019-09-28", "2019-09-29", "2019-09-30"]
 
 # ******** TEMPORARY - for printing graphs for paper! (1/2) ********
-data_date_list = ["2018-10-26"]
+data_date_list = ["2019-09-12"]
 data_date = data_date_list[0]
 
 # Data files are located here:
-INPUT_DATA_FILE_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/02_Curtail_output/'
-OUTPUT_FILE_PATH = "F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/"
+INPUT_DATA_FILE_PATH = 'F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/02_Curtail_output/'
+OUTPUT_FILE_PATH = "F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/03_Polyfit_output/"
 
 # File names are here:
 TS_DATA_FILE_PATH = '_analysis_profiles_v4.csv'
