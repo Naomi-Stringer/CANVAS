@@ -26,11 +26,15 @@ data_date_list = ["2018-01-16", "2018-01-19", "2018-02-02", "2018-02-04", "2018-
 data_date_list = ["2018-10-26"]
 data_date = data_date_list[0]
 
+# Data files are located here:
+INPUT_DATA_FILE_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/02_Curtail_output/'
+OUTPUT_FILE_PATH = "F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/"
+
+# File names are here:
 TS_DATA_FILE_PATH = '_analysis_profiles_v4.csv'
 SUM_STATS_DATA_FILE_PATH = "_analysis_sum_stats_v4.csv"
-
-# Input data is located here:
-INPUT_DATA_FILE_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/02_Curtail_output/'
+OUTPUT_PROFILES = "_analysis_profiles_polyfit_v4_005sensitivity_TEST_27_05_2021.csv"
+OUTPUT_SUM_STATS = "_analysis_sum_stats_polyfit_v4_005sensitivity_TEST_27_05_2021.csv"
 
 # This value is used to remove data points when calculating the polynomial.
 # The first polynomial uses all non zero cf values.
@@ -171,7 +175,7 @@ for data_date in data_date_list:
     output_df['gen_loss_est_kWh_preferred'] = (output_df['gen_loss_est_kWh_polyfit_iter'] * output_df['use_polyfit_iter_method_flag']) + (output_df['gen_loss_est_kWh'] * output_df['use_straight_line_method_flag'])
 
     # Optional save data to csv
-    output_df.to_csv("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/" + data_date + "_analysis_profiles_polyfit_v4_005sensitivity_TEST_27_05_2021.csv")
+    output_df.to_csv(OUTPUT_FILE_PATH + data_date + OUTPUT_PROFILES)
 
     # --------------------------------- Summary stuff
     # Calc the new generation lost amount by site and also get the max for checking that polyfit doesn't go above 1
@@ -197,59 +201,5 @@ for data_date in data_date_list:
     sum_stats_df['proportion_of_sites_preferred'] = range(len(sum_stats_df))
     sum_stats_df['proportion_of_sites_preferred'] = (sum_stats_df['proportion_of_sites_preferred'] + 1) / len(sum_stats_df)
 
-    # Optional save data to csv
-    sum_stats_df.to_csv("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/" + data_date +"_analysis_sum_stats_polyfit_v4_005sensitivity_TEST_27_05_2021.csv")
-
-
-
-
-
-
-
-
-
-
-# # --------------------------------- Checks and printing
-# # Check the number of sites with losses using straight line method > than losses using polyfit
-# check_df = sum_stats_df[sum_stats_df['polyfit_check'] ==1]
-# check_df_2 = sum_stats_df[sum_stats_df['gen_loss_est_kWh'] > 0]
-# num_sites_with_curtailment = len(check_df_2)
-# num_sites_with_LESS_curtailment_using_polyfit = len(check_df)
-# proportion_sites_with_LESS_curtailment_using_polyfit = num_sites_with_LESS_curtailment_using_polyfit / num_sites_with_curtailment
-#
-# # Check the sites with est_cf_polyfit above 1
-# brief_check = new_gen_lost[new_gen_lost['max_est_cf_polyfit_check']>=1]
-# #
-# # Check sites: 1148960611, 34507964, 106146556 <-- this is a fun case, the cf is above 1.4 a lot of the time,
-# # 126059578 <-- this one also >1 in 'normal' cf., 156705656, 459165386, 768521639, 834276710, 1006757091, 1579656213
-# # Doing sensitivity checks on 0.05 residual band for 2018-09-10: 1230920393, 1760338022, 1132774, 1550447108, 1907635136, 627114750, 626841014
-# # 2122023776, 1572542532, 379700662
-site_issues = 1398002262
-# c_id_check = 35841471
-pv_issues_check = output_df[output_df['site_id'] == site_issues]
-fig = plt.figure()
-ax = fig.add_subplot(111)
-ax.plot(pv_issues_check["time_in_seconds"], pv_issues_check["cf"], '-o', markersize=2, linewidth=1, c='g')
-ax.plot(pv_issues_check["time_in_seconds"], pv_issues_check["est_cf_polyfit_iter"], '-o', markersize=2, linewidth=1, c='r')
-ax.plot(pv_issues_check["time_in_seconds"], pv_issues_check["est_cf_preferred"], '-o', markersize=2, linewidth=1, c='b')
-# ax.plot(pv_issues_check["time_in_seconds"], pv_issues_check["est_cf"], '-o', markersize=4, linewidth=1, c='r')
-# ax2 = ax.twinx()
-# ax2.plot(pv_issues_check["time_in_seconds"], pv_issues_check["v"], '-o', markersize=4, linewidth=1, c='b')
-# ax2.grid(False)
-fig.suptitle('site_id '+str(site_issues), fontsize=16)
-plt.show()
-
-# output_df = pd.read_csv("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/"
-#                         + "2018-09-10" + "_analysis_profiles_polyfit_v1.csv",
-#                         index_col = 't_stamp', parse_dates=True)
-#
-# c_id_issues = 325299916
-# pv_issues_check = output_df[output_df['c_id'] == c_id_issues]
-# fig = plt.figure()
-# ax = fig.add_subplot(111)
-# ax.plot(pv_issues_check["time_in_seconds"], pv_issues_check["cf"], '-o', markersize=4, linewidth=1, c='g')
-# ax.plot(pv_issues_check["time_in_seconds"], pv_issues_check["est_cf_polyfit_iter"], '-o', markersize=4, linewidth=1, c='r')
-# ax2 = ax.twinx()
-# ax2.plot(pv_issues_check["time_in_seconds"], pv_issues_check["v"], '-o', markersize=4, linewidth=1, c='b')
-# fig.suptitle('site_id '+str(c_id_issues), fontsize=16)
-# plt.show()
+    # Save summary statistics to  csv
+    sum_stats_df.to_csv(OUTPUT_FILE_PATH + data_date + OUTPUT_SUM_STATS)
