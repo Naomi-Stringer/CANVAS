@@ -22,15 +22,16 @@ data_date_list = ["2018-01-16", "2018-01-19", "2018-02-02", "2018-02-04", "2018-
                     "2018-07-10", "2018-07-18", "2018-08-22", "2018-08-25", "2018-09-04", "2018-09-10",
                     "2018-10-21", "2018-10-26", "2018-11-16", "2018-11-30", "2018-12-23", "2018-12-25"]
 
-# # ******** TEMPORARY - for printing graphs for paper! (1/2) ********
-# data_date_list = ["2018-10-26"]
-# data_date = data_date_list[0]
+# ******** TEMPORARY - for printing graphs for paper! (1/2) ********
+data_date_list = ["2018-10-26"]
+data_date = data_date_list[0]
 
 TS_DATA_FILE_PATH = '_analysis_profiles_v4.csv'
 SUM_STATS_DATA_FILE_PATH = "_analysis_sum_stats_v4.csv"
 
-# If set to 1 then all the checking graphs will print
-PRINT_FLAG = 0
+# Input data is located here:
+INPUT_DATA_FILE_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/02_Curtail_output/'
+
 # This value is used to remove data points when calculating the polynomial.
 # The first polynomial uses all non zero cf values.
 # Then the straight line correlation between polyfit and actual cf is calculated and residuals found for each cf
@@ -41,13 +42,7 @@ allowed_residual_band = 0.05 # NOTE - set to 0.05 after some sensitivity testing
 
 for data_date in data_date_list:
     # Load PV profiles
-    data_df = pd.read_csv('F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/' + data_date + TS_DATA_FILE_PATH,
-                          index_col = 't_stamp', parse_dates=True)
-
-    # # ******** TEMPORARY - for printing graphs for paper! (2/2) ********
-    # # 2018-10-21 site 1455498992,
-    # site_id = ['1550447108']
-    # data_df = data_df[data_df['site_id'].isin(site_id)]
+    data_df = pd.read_csv(INPUT_DATA_FILE_PATH + data_date + TS_DATA_FILE_PATH, index_col = 't_stamp', parse_dates=True)
 
     # Get list of c_ids
     c_id_list = data_df['c_id'].drop_duplicates().tolist()
@@ -64,19 +59,6 @@ for data_date in data_date_list:
         # Filter for c_id
         pv_data = data_df[data_df['c_id'] == c_id]
         pv_data['t_stamp_copy'] = pv_data.index
-
-        if PRINT_FLAG == 1:
-            # Plot PV over time (to check)
-            fig, ax = plt.subplots()
-            ax.plot(pv_data["t_stamp_copy"], pv_data["cf"], '-o', markersize=2, linewidth=1, c='g')
-            ax.plot(pv_data["t_stamp_copy"], pv_data["est_cf"], 'o', markersize=2, linewidth=1, c='r')
-            # ax1 = ax.twinx()
-            # ax1.plot(pv_data["t_stamp_copy"], pv_data["v"], '-o', markersize=4, linewidth=1, c='b')
-            plt.xlabel('Time')
-            plt.ylabel('Normalised Power (kW/kWac)')
-            ax.xaxis.set_major_formatter(time_fmt)
-            fig.suptitle(str(c_id), fontsize=16)
-            plt.show()
 
         # First get time in seconds for polyfit
         pv_data['hrs'] = pv_data.index.hour
@@ -99,17 +81,6 @@ for data_date in data_date_list:
             pv_data['polynomial_fit'] = z[0]*pv_data['time_in_seconds']*pv_data['time_in_seconds'] + \
                                             z[1]*pv_data['time_in_seconds'] + z[2]
 
-            if PRINT_FLAG == 1:
-                # Plot PV and irradiance over time (to check)
-                fig, ax = plt.subplots()
-                ax.plot(pv_data["t_stamp_copy"], pv_data["cf"], '-o', markersize=2, linewidth=1, c='g')
-                ax.plot(pv_data["t_stamp_copy"], pv_data["polynomial_fit"], '-o', markersize=2, linewidth=1, c='r')
-                plt.xlabel('Time')
-                plt.ylabel('Normalised Power (kW/kWac)')
-                ax.xaxis.set_major_formatter(time_fmt)
-                fig.suptitle(str(c_id), fontsize=16)
-                plt.show()
-
             # Get the correlation between my polynomial and the cf data (excluding zeroes) then remove points with
             # 'large' residuals
             # Get line of best fit
@@ -118,19 +89,6 @@ for data_date in data_date_list:
             y = test['polynomial_fit']
             m,c = np.linalg.lstsq(A,y)[0]
             test['y_line'] = c + m*test['cf']
-
-            if PRINT_FLAG == 1:
-                # Plot cf versus polyfit to see how well they are correlated.
-                # Show the line of best fit +/- allowed_residual_band
-                fig, ax = plt.subplots()
-                ax.plot(test["cf"], test["polynomial_fit"], 'o', markersize=2, linewidth=1, c='g')
-                ax.plot(test['cf'], test['y_line'] )
-                ax.plot(test['cf'], test['y_line'] + allowed_residual_band)
-                ax.plot(test['cf'], test['y_line'] - allowed_residual_band)
-                plt.xlabel('Normalised Power (kW/kWac)')
-                plt.ylabel('Polynomial fit (first attempt)')
-                fig.suptitle(str(c_id), fontsize=16)
-                plt.show()
 
             # Remove data points where the residual is +/- allowed_residual_band from the line of best fit
             # (in an attempt to improve our correlation)
@@ -150,17 +108,6 @@ for data_date in data_date_list:
             # estimate) then use est_cf_polyfit_iter
             pv_data['est_cf_polyfit_iter'] = np.nan
             pv_data.loc[pv_data['est_cf']>0, 'est_cf_polyfit_iter'] = pv_data['polyfit_iter']
-
-            if PRINT_FLAG == 1:
-                # Plot PV and new polyfit over time (to check)
-                fig, ax = plt.subplots()
-                ax.plot(pv_data["t_stamp_copy"], pv_data["cf"], '-o', markersize=2, linewidth=1, c='g')
-                ax.plot(pv_data["t_stamp_copy"], pv_data["est_cf_polyfit_iter"], 'o', markersize=2, linewidth=1, c='r')
-                plt.xlabel('Time')
-                plt.ylabel('Normalised Power (kW/kWac)')
-                ax.xaxis.set_major_formatter(time_fmt)
-                fig.suptitle(str(c_id), fontsize=16)
-                plt.show()
 
             # Just keep the polyfit_iter for the periods where there was already a straight line estimate as above
             pv_data = pv_data.drop(['polynomial_fit'], axis=1)
@@ -224,7 +171,7 @@ for data_date in data_date_list:
     output_df['gen_loss_est_kWh_preferred'] = (output_df['gen_loss_est_kWh_polyfit_iter'] * output_df['use_polyfit_iter_method_flag']) + (output_df['gen_loss_est_kWh'] * output_df['use_straight_line_method_flag'])
 
     # Optional save data to csv
-    output_df.to_csv("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/" + data_date + "_analysis_profiles_polyfit_v4_005sensitivity.csv")
+    output_df.to_csv("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/" + data_date + "_analysis_profiles_polyfit_v4_005sensitivity_TEST_27_05_2021.csv")
 
     # --------------------------------- Summary stuff
     # Calc the new generation lost amount by site and also get the max for checking that polyfit doesn't go above 1
@@ -232,7 +179,7 @@ for data_date in data_date_list:
                                   'gen_loss_est_kWh_preferred' : output_df.groupby('site_id')['gen_loss_est_kWh_preferred'].sum()})
 
     # Open previous sum stats
-    sum_stats_df = pd.read_csv("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/" + data_date + SUM_STATS_DATA_FILE_PATH)
+    sum_stats_df = pd.read_csv(INPUT_DATA_FILE_PATH + data_date + SUM_STATS_DATA_FILE_PATH)
 
     # Append on the new gen lost
     sum_stats_df = sum_stats_df.merge(new_gen_lost, left_on='site_id', right_index=True)
@@ -251,7 +198,7 @@ for data_date in data_date_list:
     sum_stats_df['proportion_of_sites_preferred'] = (sum_stats_df['proportion_of_sites_preferred'] + 1) / len(sum_stats_df)
 
     # Optional save data to csv
-    sum_stats_df.to_csv("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/" + data_date +"_analysis_sum_stats_polyfit_v4_005sensitivity.csv")
+    sum_stats_df.to_csv("F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/" + data_date +"_analysis_sum_stats_polyfit_v4_005sensitivity_TEST_27_05_2021.csv")
 
 
 
