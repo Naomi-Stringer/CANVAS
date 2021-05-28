@@ -6,26 +6,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-import matplotlib.patches as patches
 from matplotlib.patches import Rectangle
 import matplotlib.ticker as mtick
 import calendar
 import seaborn as sns; sns.set()
-import itertools
-from datetime import datetime, timedelta
-from time import gmtime, strftime
-from collections import OrderedDict
-
-import plotly
-import plotly.express as px
-
-from matplotlib import cm
-from matplotlib.pyplot import figure
-import statsmodels.api as sm
+import matplotlib.pylab as pylab
 
 import util
-
-import matplotlib.pylab as pylab
 
 # Graphing params
 # Choose colors here: https://python-graph-gallery.com/100-calling-a-color-with-seaborn/
@@ -69,10 +56,10 @@ data_date_list = ['2018-01-16', '2018-01-19', '2018-02-02', '2018-02-04', '2018-
                     '2018-07-10', '2018-07-18', '2018-08-22', '2018-08-25', '2018-09-04', '2018-09-10', 
                     '2018-10-21', '2018-10-26', '2018-11-16', '2018-11-30', '2018-12-23', '2018-12-25']
 
-SUM_STAT_DATA_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/'
-PC_LAT_LON_DATA_FILE_PATH = 'F:/disturbances_analysis/curtail_analysis/copy_DER_disturbance_analysis_for_curtail_data_clean/PostcodesLatLongQGIS.csv'
+SUM_STAT_DATA_PATH = 'F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/03_Polyfit_output/'
+PC_LAT_LON_DATA_FILE_PATH = 'F:/CANVAS/PostcodesLatLongQGIS.csv'
 
-FIG_V_STRING = '_v7'
+FIG_V_STRING = '_v7_TEST_28-05-2021'
 
 SA_INSTALLED_CAPACITY_under_10kW = 844.2
 SA_INSTALLED_CAPACITY_10_to_100kW = 246.1
@@ -90,8 +77,8 @@ CURTAIL_METHOD = 'PREFERRED_FIT_METHOD'
 
 # For plotting example cases
 EXAMPLE_DATA_DATE = "2018-10-26"
-EXAMPLE_TS_DATA_FILE_PATH = "F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/" + EXAMPLE_DATA_DATE + "_analysis_profiles_polyfit_v4_005sensitivity.csv"
-EXAMPLE_END_PTS_METHOD_DATA_FILE_PATH = "F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/" + EXAMPLE_DATA_DATE + "_analysis_profiles_FULL_DETAIL_v4.csv"
+EXAMPLE_TS_DATA_FILE_PATH = "F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/03_Polyfit_output/" + EXAMPLE_DATA_DATE + "_analysis_profiles_polyfit_v4_005sensitivity.csv"
+EXAMPLE_END_PTS_METHOD_DATA_FILE_PATH = "F:/05_Solar_Analytics/2019-07-23_dtd_v_curtail_24days/02_Curtail_output/" + EXAMPLE_DATA_DATE + "_analysis_profiles_FULL_DETAIL_v4.csv"
 EXAMPLE_SITE_ID = ['1550447108']
 LINEAR_FIT_PREFERRED_EXAMPLE_SITE_ID = ['1579656213']
 # LINEAR_FIT_PREFERRED_EXAMPLE_SITE_ID_2 = ['1006757091', '1148960611', '86475953', '1775087102', '172441921', '2086445345', '1930975965']
@@ -163,7 +150,7 @@ w['data_date'] = data_date_list[22]
 x['data_date'] = data_date_list[23]
 
 # Concat
-all_days_df = pd.concat([a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x], sort=True)
+all_days_df = pd.concat([a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x])
 
 #------------------------ Add stuff to the all_days_df  ------------------------
 # Add month column
@@ -277,7 +264,7 @@ fig, (ax1, ax2, ax3) = plt.subplots(3, 1)
 fig.set_size_inches(12, 12)
 # percentage lost distributions - NOTE for some unknown reason the order of the props items also matter. try not to change them.
 sns.boxplot(x='pv_penetration_bins', y='percentage_lost', data=printing_df, showmeans=True, meanprops=meanprops, whiskerprops=whiskerprops, capprops=whiskerprops, boxprops=boxprops, flierprops=flierprops, medianprops=whiskerprops, ax = ax1)
-ax1.yaxis.set_major_formatter(mtick.PercentFormatter(1.0))
+# ax1.yaxis.set_major_formatter(mtick.PercentFormatter(1.0))
 ax1.set_ylim([-0.05,1.0])
 ax1.set_xlim([-0.5,9.5])
 ax1.set(ylabel='Percentage lost', xlabel='')
@@ -300,8 +287,8 @@ for p in ax3.patches:
 # Plot
 plt.show()
 # Save figure
-# fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'plot_8_penetration_vs_v_and_pv_loss_'+str(CURTAIL_METHOD)+ FIG_V_STRING +'.png', dpi=400, bbox_inches = 'tight', pad_inches = 0)
-fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'plot_8_penetration_vs_v_and_pv_loss_'+str(CURTAIL_METHOD)+ FIG_V_STRING +'.pdf', bbox_inches = 'tight', pad_inches = 0.1)
+# fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'plot_8_penetration_vs_v_and_pv_loss_'+str(CURTAIL_METHOD)+ FIG_V_STRING +'.png', dpi=400, bbox_inches = 'tight', pad_inches = 0)
+fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'plot_8_penetration_vs_v_and_pv_loss_'+str(CURTAIL_METHOD)+ FIG_V_STRING +'.pdf', bbox_inches = 'tight', pad_inches = 0.1)
 
 #------------------------ Plot 1 ------------------------
 # Make a chart of proportion_of_sites(x) vs percentage_lost (y) with series for each data_date
@@ -369,7 +356,7 @@ plt.ylabel('Percentage generation lost')
 vals = ax.get_yticks()
 ax.set_yticklabels(['{:,.0%}'.format(x) for x in vals])
 # Save figure
-fig.savefig(SUM_STAT_DATA_PATH + '/Images/plot_6_spread_of_gen_lost_over_dates_'+str(CURTAIL_METHOD)+ FIG_V_STRING +'.png',
+fig.savefig(SUM_STAT_DATA_PATH + 'Images/plot_6_spread_of_gen_lost_over_dates_'+str(CURTAIL_METHOD)+ FIG_V_STRING +'.png',
             dpi=100, bbox_inches = 'tight', pad_inches = 0)
 # Print the figure
 plt.show()
@@ -387,7 +374,7 @@ plt.ylabel('Percentage generation lost')
 # Add second axis with num sites
 # ax1 = sns.pointplot(y='proportion_of_sites_curtailed', x='month', data = site_count_df)
 # Save figure
-fig.savefig(SUM_STAT_DATA_PATH + '/Images/plot_6_spread_of_gen_lost_over_months_'+str(CURTAIL_METHOD)+ FIG_V_STRING + '.png', dpi=100,
+fig.savefig(SUM_STAT_DATA_PATH + 'Images/plot_6_spread_of_gen_lost_over_months_'+str(CURTAIL_METHOD)+ FIG_V_STRING + '.png', dpi=100,
             bbox_inches = 'tight', pad_inches = 0)
 # plot
 plt.show()
@@ -408,7 +395,7 @@ sns.boxplot(x='month_string', y='mean_v_all_daylight_hours', data=all_days_df_ex
 plt.xlabel('Month')
 plt.ylabel('Voltage (Vrms)')
 # Save figure
-fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'plot_6_spread_of_v_over_months_'+str(CURTAIL_METHOD)+ FIG_V_STRING +'.png', dpi=100,
+fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'plot_6_spread_of_v_over_months_'+str(CURTAIL_METHOD)+ FIG_V_STRING +'.png', dpi=100,
             bbox_inches = 'tight', pad_inches = 0)
 # Axis limits
 ax.set(ylim=(230,260))
@@ -447,7 +434,7 @@ high_level_stats_df_v2 = pd.DataFrame({'sum_ac': all_days_df_excl_zero_curtail_s
     })
 
 # Export to csv
-high_level_stats_df_v1.to_csv(SUM_STAT_DATA_PATH + 'IMAGES/high_level_stats_df-INCLUDING_zero_curtail_sites_'+str(CURTAIL_METHOD)+ FIG_V_STRING + '.csv')
+high_level_stats_df_v1.to_csv(SUM_STAT_DATA_PATH + '/high_level_stats_df-INCLUDING_zero_curtail_sites_'+str(CURTAIL_METHOD)+ FIG_V_STRING + '.csv')
 high_level_stats_df_v2.to_csv(SUM_STAT_DATA_PATH + 'Images/high_level_stats_df-EXCLUDING_zero_curtail_sites_'+str(CURTAIL_METHOD)+ FIG_V_STRING + '.csv')
 
 average_kWh_lost_per_day_per_kWh = high_level_stats_df_v1['mean_kWh_lost_per_day_per_kWac'].mean()
@@ -493,8 +480,8 @@ plt.ylabel('Average kWh lost generation '
 # ax1.set_ylim([-0.05,3])
 plt.show()
 # Save
-# fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'plot_9_voltage_v_kWh_per_kWac_lost_SEASONS_'+str(CURTAIL_METHOD)+ FIG_V_STRING + '.png', dpi=400, bbox_inches = 'tight', pad_inches = 0)
-fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'plot_9_voltage_v_kWh_per_kWac_lost_SEASONS_'+str(CURTAIL_METHOD)+ FIG_V_STRING + '.pdf', bbox_inches = 'tight', pad_inches = 0.1)
+# fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'plot_9_voltage_v_kWh_per_kWac_lost_SEASONS_'+str(CURTAIL_METHOD)+ FIG_V_STRING + '.png', dpi=400, bbox_inches = 'tight', pad_inches = 0)
+fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'plot_9_voltage_v_kWh_per_kWac_lost_SEASONS_'+str(CURTAIL_METHOD)+ FIG_V_STRING + '.pdf', bbox_inches = 'tight', pad_inches = 0.1)
 
 #------------------------
 # Get r values
@@ -526,11 +513,11 @@ distributional_impact_plot_data['lower_bound_fin_impact'] = distributional_impac
 distributional_impact_plot_data['upper_bound_fin_impact'] = distributional_impact_plot_data['mean_kWh_lost_per_day_per_kWac'] / 1000.0 * SELF_CONSUME_DOLLARS_PER_MWH * 365
 
 # Plot in excel
-distributional_impact_plot_data.to_csv(SUM_STAT_DATA_PATH + "/Images/distributional_impact_plot_data_"+str(CURTAIL_METHOD)+ FIG_V_STRING + ".csv")
+distributional_impact_plot_data.to_csv(SUM_STAT_DATA_PATH + "Images/distributional_impact_plot_data_"+str(CURTAIL_METHOD)+ FIG_V_STRING + ".csv")
 
 #------------------------ Export data ------------------------
-all_days_df_incl_zero_curtail_sites.to_csv(SUM_STAT_DATA_PATH + "all_days_analysis_INCLUDING_zero_curtail_sites_"+str(CURTAIL_METHOD) + FIG_V_STRING + ".csv")
-all_days_df_excl_zero_curtail_sites.to_csv(SUM_STAT_DATA_PATH + "all_days_analysis_EXCLUDING_zero_curtail_sites_"+str(CURTAIL_METHOD)+ FIG_V_STRING + ".csv")
+all_days_df_incl_zero_curtail_sites.to_csv(SUM_STAT_DATA_PATH + "Images/all_days_analysis_INCLUDING_zero_curtail_sites_"+str(CURTAIL_METHOD) + FIG_V_STRING + ".csv")
+all_days_df_excl_zero_curtail_sites.to_csv(SUM_STAT_DATA_PATH + "Images/all_days_analysis_EXCLUDING_zero_curtail_sites_"+str(CURTAIL_METHOD)+ FIG_V_STRING + ".csv")
 
 # #------------------------ Example plots ------------------------
 # #------------------------# #------------------------ # #------------------------
@@ -582,9 +569,9 @@ for c_id in eg_c_id_list:
     ax.set(ylim=(-0.05, 1))
     # fig.suptitle(str(c_id), fontsize=16)
     # fig.set_size_inches(6, 4)
-    # fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'example_polyfit_iter_method_1'
+    # fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'example_polyfit_iter_method_1'
     #             + FIG_V_STRING + '.png', dpi=400, bbox_inches='tight', pad_inches=0)
-    fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'example_polyfit_iter_method_1'
+    fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'example_polyfit_iter_method_1'
                 + FIG_V_STRING + '.pdf', bbox_inches='tight', pad_inches=0.1)
     plt.show()
 
@@ -626,7 +613,7 @@ for c_id in eg_c_id_list:
     ax.set(ylim=(-0.05, 1))
     # fig.suptitle(str(c_id), fontsize=16)
     # fig.set_size_inches(6, 4)
-    fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'example_polyfit_iter_method_2'
+    fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'example_polyfit_iter_method_2'
                 + FIG_V_STRING + '.pdf', bbox_inches='tight', pad_inches=0.1)
     # fig.suptitle(str(c_id), fontsize=16)
     plt.show()
@@ -647,7 +634,7 @@ for c_id in eg_c_id_list:
     plt.ylabel('Polynomial fit (polyfit 1)')
     ax.legend(fontsize=15)
     ax.set(ylim=(-0.1, 1), xlim=(-0.1,1))
-    fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'example_polyfit_iter_method_3'
+    fig.savefig(SUM_STAT_DATA_PATH + '/' + 'example_polyfit_iter_method_3'
                 + FIG_V_STRING + '.pdf', bbox_inches='tight', pad_inches=0.1)
     # fig.suptitle(str(c_id), fontsize=16)
     plt.show()
@@ -665,7 +652,7 @@ for c_id in eg_c_id_list:
     ax.set(ylim=(-0.05, 1))
     # fig.suptitle(str(c_id), fontsize=16)
     # fig.set_size_inches(6, 4)
-    fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'example_polyfit_iter_method_4'
+    fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'example_polyfit_iter_method_4'
                 + FIG_V_STRING + '.pdf', bbox_inches='tight', pad_inches=0.1)
     plt.show()
 
@@ -702,7 +689,7 @@ for c_id in eg_c_id_list:
     ax.set(ylim=(-0.05, 1.4))
     # fig.suptitle(str(c_id), fontsize=16)
     # fig.set_size_inches(6, 4)
-    fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'example_linear_method_preferred_due_to_CF'
+    fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'example_linear_method_preferred_due_to_CF'
                 + FIG_V_STRING + '.pdf', bbox_inches='tight', pad_inches=0.1)
     plt.show()
 
@@ -738,7 +725,7 @@ for c_id in eg_c_id_list:
     ax.set(ylim=(-0.05, 1.4))
     # fig.suptitle('site_id ' + str(site_id) + ' c_id ' + str(c_id), fontsize=16)
     # fig.set_size_inches(6, 4)
-    fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'example_linear_method_preferred_due_to_total_PV_losses'
+    fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'example_linear_method_preferred_due_to_total_PV_losses'
                 + FIG_V_STRING + '.pdf', bbox_inches='tight', pad_inches=0.1)
     plt.show()
 
@@ -794,7 +781,7 @@ ax1.legend(fontsize=15,loc=1, borderaxespad=1.)
 ax1.add_artist(legend_1)
 # ***
 ax.set(ylim=(-0.05, 6))
-fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'example_lost_self_consumption_with_voltage'
+fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'example_lost_self_consumption_with_voltage'
             + FIG_V_STRING + '.pdf', bbox_inches='tight', pad_inches=0.1)
 plt.show()
 
@@ -849,7 +836,7 @@ ax.xaxis.set_major_formatter(time_fmt)
 ax.legend(fontsize=15, loc='upper left')
 ax.set(ylim=(-0.05, 1.2))
 plt.show()
-fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'example_get_start_and_end_pts_1'
+fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'example_get_start_and_end_pts_1'
             + FIG_V_STRING + '.pdf', bbox_inches='tight', pad_inches=0.1)
 
 
@@ -908,7 +895,7 @@ vals = ax2.get_yticks()
 ax2.set_yticklabels(['{:,.0%}'.format(x) for x in vals])
 # Save
 plt.tight_layout()
-fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'example_get_start_and_end_pts_2'
+fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'example_get_start_and_end_pts_2'
             + FIG_V_STRING + '.pdf', bbox_inches='tight', pad_inches=0.1)
 
 # #------------------------ Curtail end
@@ -964,7 +951,7 @@ vals = ax2.get_yticks()
 ax2.set_yticklabels(['{:,.0%}'.format(x) for x in vals])
 # Save
 plt.tight_layout()
-fig.savefig(SUM_STAT_DATA_PATH + '/Images/' + 'example_get_start_and_end_pts_3'
+fig.savefig(SUM_STAT_DATA_PATH + 'Images/' + 'example_get_start_and_end_pts_3'
             + FIG_V_STRING + '.pdf', bbox_inches='tight', pad_inches=0.1)
 
 
