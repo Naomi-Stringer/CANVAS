@@ -6,12 +6,8 @@
 # Import packages required for program
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-import matplotlib.ticker
 import seaborn as sns; sns.set()
-import time
-
 # For graphing time series
 time_fmt = mdates.DateFormatter('%H:%M')
 
@@ -23,10 +19,6 @@ data_date_list = ["2019-09-01", "2019-09-02", "2019-09-03", "2019-09-04", "2019-
                   "2019-09-19", "2019-09-20", "2019-09-21", "2019-09-22", "2019-09-23", "2019-09-24",
                   "2019-09-25", "2019-09-26", "2019-09-27", "2019-09-28", "2019-09-29", "2019-09-30"]
 
-# ******** TEMPORARY - for printing graphs for paper! (1/2) ********
-data_date_list = ["2019-09-12"]
-data_date = data_date_list[0]
-
 # Data files are located here:
 INPUT_DATA_FILE_PATH = 'F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/02_Curtail_output/'
 OUTPUT_FILE_PATH = "F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/03_Polyfit_output/"
@@ -34,8 +26,11 @@ OUTPUT_FILE_PATH = "F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_
 # File names are here:
 TS_DATA_FILE_PATH = '_analysis_profiles_v4.csv'
 SUM_STATS_DATA_FILE_PATH = "_analysis_sum_stats_v4.csv"
-OUTPUT_PROFILES = "_analysis_profiles_polyfit_v4_005sensitivity_TEST_27_05_2021.csv"
-OUTPUT_SUM_STATS = "_analysis_sum_stats_polyfit_v4_005sensitivity_TEST_27_05_2021.csv"
+OUTPUT_PROFILES = "_analysis_profiles_polyfit_v4.csv"
+OUTPUT_SUM_STATS = "_analysis_sum_stats_polyfit_v4.csv"
+
+# File path for clear sky days csv
+CLEAR_SKY_DAYS_FILE_PATH = 'F:/CANVAS/clear_sky_days_01-2019_07-2020_manual.csv'
 
 # This value is used to remove data points when calculating the polynomial.
 # The first polynomial uses all non zero cf values.
@@ -48,6 +43,13 @@ allowed_residual_band = 0.05 # NOTE - set to 0.05 after some sensitivity testing
 for data_date in data_date_list:
     # Load PV profiles
     data_df = pd.read_csv(INPUT_DATA_FILE_PATH + data_date + TS_DATA_FILE_PATH, index_col = 't_stamp', parse_dates=True)
+    # Load clear sky days CSV and flag NON clear sky days in data_df
+    clear_sky_days_df = pd.read_csv(CLEAR_SKY_DAYS_FILE_PATH)
+    clear_sky_days_list = clear_sky_days_df['clear_sky_days'].astype(str).tolist()
+    if data_date in clear_sky_days_list:
+        data_df['non_clear_sky_day_flag'] = 0
+    else:
+        data_df['non_clear_sky_day_flag'] = 1
 
     # Get list of c_ids
     c_id_list = data_df['c_id'].drop_duplicates().tolist()
@@ -132,7 +134,6 @@ for data_date in data_date_list:
         # --------------------------------- concat onto output_df
         output_df = pd.concat([output_df, pv_data])
 
-
     # *********************************** CHECKS and identify 'preferred' method ***********************************
     # Check on polyfit giving large cfs (>=1) --> allowed if the cf for that c_id is already large
     # For each c_id get max polyfit and max cf
@@ -164,7 +165,8 @@ for data_date in data_date_list:
     output_df = output_df.merge(cf_max_check_by_site_id, left_on='site_id', right_index=True, how='left')
     output_df = output_df.merge(gen_loss_total_check, left_on='site_id', right_index=True, how='left')
     # Get flag if either conditions are true
-    output_df['use_straight_line_method_flag'] = output_df['must_use_straight_line_method_due_to_gen_loss_total'] + output_df['must_use_straight_line_method_due_to_cf_max']
+    # OR if not a clear sky day
+    output_df['use_straight_line_method_flag'] = output_df['must_use_straight_line_method_due_to_gen_loss_total'] + output_df['must_use_straight_line_method_due_to_cf_max'] + output_df['non_clear_sky_day_flag']
     output_df.loc[output_df['use_straight_line_method_flag'] > 1, 'use_straight_line_method_flag'] = 1
     output_df['use_polyfit_iter_method_flag'] = 1 - output_df['use_straight_line_method_flag']
 
@@ -180,8 +182,11 @@ for data_date in data_date_list:
 
     # --------------------------------- Summary stuff
     # Calc the new generation lost amount by site and also get the max for checking that polyfit doesn't go above 1
+    # Also add the reason for selecting polyfit or linear estimate
     new_gen_lost = pd.DataFrame({ 'gen_loss_est_kWh_polyfit_iter' : output_df.groupby('site_id')['gen_loss_est_kWh_polyfit_iter'].sum(),
-                                  'gen_loss_est_kWh_preferred' : output_df.groupby('site_id')['gen_loss_est_kWh_preferred'].sum()})
+                                  'gen_loss_est_kWh_preferred' : output_df.groupby('site_id')['gen_loss_est_kWh_preferred'].sum(),
+                                  'linear_method_preferred' : output_df.groupby('site_id')['use_straight_line_method_flag'].max(),
+                                  'polyfit_method_preferred' : output_df.groupby('site_id')['use_polyfit_iter_method_flag'].max()})
 
     # Open previous sum stats
     sum_stats_df = pd.read_csv(INPUT_DATA_FILE_PATH + data_date + SUM_STATS_DATA_FILE_PATH)
