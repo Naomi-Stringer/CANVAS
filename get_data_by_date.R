@@ -8,8 +8,8 @@ library(ggplot2)
 library(plotly)
 
 setwd("F:/CANVAS")
-input_data_path <- "F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/00_Raw_data/processed_unsw_201909_data_raw.csv"
-output_data_path <- "F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/00_Raw_data/"
+input_data_path <- "F:/05_Solar_Analytics/2021-05-31_CANVAS_Solar_Analytics_data/00_Raw_data_by_month/processed_unsw_202004_data_raw.csv"
+output_data_path <- "F:/05_Solar_Analytics/2021-05-31_CANVAS_Solar_Analytics_data/00_Raw_data/"
 
 # Import CSV
 df <- read.csv(input_data_path)
