@@ -76,17 +76,17 @@ data_date_list = ["2019-07-02","2019-07-03","2019-07-04","2019-07-05", #"2019-07
                     "2020-04-26","2020-04-27","2020-04-28","2020-04-29","2020-04-30"]
 
 # Input/output file locations
-INPUT_DATA_FOLDER_PATH = 'F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/01_Cleaned_data/'
-OUTPUT_DATA_FOLDER_PATH = 'F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/02_Curtail_output/'
+INPUT_DATA_FOLDER_PATH = 'F:/05_Solar_Analytics/2021-05-31_CANVAS_Solar_Analytics_data/01_Cleaned_data/'
+OUTPUT_DATA_FOLDER_PATH = 'F:/05_Solar_Analytics/2021-05-31_CANVAS_Solar_Analytics_data/02_Curtail_output/'
 
 # CER and APVI data on PV penetration / installs
 PC_INSTALLS_DATA_FILE_PATH = 'F:/CANVAS/Postcode_data_for_small-scale installations-SGU-Solar_approx_2019_20.csv'
 DWELLINGS_DATA_FILE_PATH = 'F:/CANVAS/postcodes_4b8c.csv'
 
 # Output file names
-TS_DATA_FILE_NAME_FULL = "_analysis_profiles_FULL_DETAIL_v4_TEST_2-Jun-2021.csv"
-TS_DATA_FILE_NAME = "_analysis_profiles_v4_2-Jun-2021.csv"
-SUM_STATS_DATA_FILE_NAME = "_analysis_sum_stats_v4_2-Jun-2021.csv"
+TS_DATA_FILE_NAME_FULL = "_analysis_profiles_FULL_DETAIL_v4.csv"
+TS_DATA_FILE_NAME = "_analysis_profiles_v4.csv"
+SUM_STATS_DATA_FILE_NAME = "_analysis_sum_stats_v4.csv"
 
 # List of connection types for filtering
 pv_list = ['pv_site_net', 'pv_site', 'pv_inverter_net']
