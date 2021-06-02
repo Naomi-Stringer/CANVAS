@@ -45,21 +45,19 @@ def get_penetration_by_postcode(PC_INSTALLS_DATA_FILE_PATH, DWELLINGS_DATA_FILE_
     apvi_data = pd.read_csv(DWELLINGS_DATA_FILE_PATH)
     # Need to calculate the cumulative num of installs in each month first
     # First clean CER data
-    cer_data['Previous Years (2001-2017) - Installations Quantity'] = cer_data['Previous Years (2001-2017) - Installations Quantity'].str.replace(',', '')
-    cer_data['Previous Years (2001-2017) - Installations Quantity'] = cer_data['Previous Years (2001-2017) - Installations Quantity'].astype(str).astype(int)
+    cer_data['Previous Years (2001- June 2019) - Installations Quantity'] = cer_data['Previous Years (2001- June 2019) - Installations Quantity'].str.replace(',', '')
+    cer_data['Previous Years (2001- June 2019) - Installations Quantity'] = cer_data['Previous Years (2001- June 2019) - Installations Quantity'].astype(str).astype(int)
     # Then get cumulative
-    cer_data['Jan'] = cer_data['Previous Years (2001-2017) - Installations Quantity'].astype(int) + cer_data['Jan 2018 - Installations Quantity'].astype(int)
-    cer_data['Feb'] = cer_data['Jan'] + cer_data['Feb 2018 - Installations Quantity']
-    cer_data['Mar'] = cer_data['Feb'] + cer_data['Mar 2018 - Installations Quantity']
-    cer_data['Apr'] = cer_data['Mar'] + cer_data['Apr 2018 - Installations Quantity']
-    cer_data['May'] = cer_data['Apr'] + cer_data['May 2018 - Installations Quantity']
-    cer_data['Jun'] = cer_data['May'] + cer_data['Jun 2018 - Installations Quantity']
-    cer_data['Jul'] = cer_data['Jun'] + cer_data['Jul 2018 - Installations Quantity']
-    cer_data['Aug'] = cer_data['Jul'] + cer_data['Aug 2018 - Installations Quantity']
-    cer_data['Sep'] = cer_data['Aug'] + cer_data['Sep 2018 - Installations Quantity']
-    cer_data['Oct'] = cer_data['Sep'] + cer_data['Oct 2018 - Installations Quantity']
-    cer_data['Nov'] = cer_data['Oct'] + cer_data['Nov 2018 - Installations Quantity']
-    cer_data['Dec'] = cer_data['Nov'] + cer_data['Dec 2018 - Installations Quantity']
+    cer_data['Jul'] = cer_data['Previous Years (2001- June 2019) - Installations Quantity'].astype(int) + cer_data['Jul 2019 - Installations Quantity'].astype(int)
+    cer_data['Aug'] = cer_data['Jul'] + cer_data['Aug 2019 - Installations Quantity']
+    cer_data['Sep'] = cer_data['Aug'] + cer_data['Sep 2019 - Installations Quantity']
+    cer_data['Oct'] = cer_data['Sep'] + cer_data['Oct 2019 - Installations Quantity']
+    cer_data['Nov'] = cer_data['Oct'] + cer_data['Nov 2019 - Installations Quantity']
+    cer_data['Dec'] = cer_data['Nov'] + cer_data['Dec 2019 - Installations Quantity']
+    cer_data['Jan'] = cer_data['Dec'] + cer_data['Jan 2020 - Installations Quantity']
+    cer_data['Feb'] = cer_data['Jan'] + cer_data['Feb 2020 - Installations Quantity']
+    cer_data['Mar'] = cer_data['Feb'] + cer_data['Mar 2020 - Installations Quantity']
+    cer_data['Apr'] = cer_data['Mar'] + cer_data['Apr 2020 - Installations Quantity']
 
     # get month in this data set
     month_now = output_df.index[0]
