@@ -514,17 +514,15 @@ for DATA_DATE in data_date_list:
 
 
 # spot check
-check_df = pd.read_csv('F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/'
-                       '02_Curtail_output/2019-09-16_analysis_profiles_v4.csv', index_col = 't_stamp',
+check_df = pd.read_csv(OUTPUT_DATA_FOLDER_PATH + '2019-11-18_analysis_profiles_v4.csv', index_col = 't_stamp',
                        parse_dates=True )
 check_df = check_df[check_df['site_id'].isin([962508189, 607745554])]
-check_df.to_csv('F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/'
-                       '02_Curtail_output/2019-09-16_analysis_profiles_v4_sites_962508189_607745554.csv')
+check_df.to_csv(OUTPUT_DATA_FOLDER_PATH + 'spot_checks/2019-11-18_analysis_profiles_v4_sites_962508189_607745554.csv')
 
 # spot check Polyfit
-check_df = pd.read_csv('F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/'
-                       '03_Polyfit_output/2019-09-12_analysis_profiles_polyfit_v4_005sensitivity_TEST_27_05_2021.csv', index_col = 't_stamp',
+check_df = pd.read_csv('F:/05_Solar_Analytics/2021-05-31_CANVAS_Solar_Analytics_data/03_Polyfit_output/'
+                       '2019-07-14_analysis_profiles_polyfit_v4.csv', index_col = 't_stamp',
                        parse_dates=True )
-check_df = check_df[check_df['site_id'].isin([962508189, 607745554])]
-check_df.to_csv('F:/05_Solar_Analytics/2021-05-24_sample_CANVAS_curtail_data_sept_2019/'
-                       '03_Polyfit_output/2019-09-12_sites_962508189_607745554.csv')
+check_df = check_df[check_df['site_id'].isin([962508189, 607745554, 1418328284, 680517741])]
+check_df.to_csv('F:/05_Solar_Analytics/2021-05-31_CANVAS_Solar_Analytics_data/03_Polyfit_output/spot_checks/'
+                '2019-07-14_analysis_profiles_polyfit_v4_sites_962508189_607745554_1418328284_680517741.csv')
