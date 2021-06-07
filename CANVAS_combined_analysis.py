@@ -16,12 +16,15 @@ import util
 
 # Inputs
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 INPUT_FILE_PATH = "F:/05_Solar_Analytics/2021-05-31_CANVAS_Solar_Analytics_data/03_Polyfit_output/"
 SUM_STATS_FILE_NAME = "_analysis_sum_stats_polyfit_v4.csv"
+TS_FILE_NAME = "_analysis_profiles_polyfit_v4.csv"
 
 OUTPUT_FILE_PATH = "F:/05_Solar_Analytics/2021-05-31_CANVAS_Solar_Analytics_data/04_Findings/"
 OUTPUT_VERSION = "_v1"
+
+LINEAR_INPUT_FILE_PATH = "F:/05_Solar_Analytics/2021-05-31_CANVAS_Solar_Analytics_data/02_Curtail_output/"
+LINEAR_FILE_NAME = "_analysis_profiles_FULL_DETAIL_v4.csv"
 
 CLEAR_SKY_DAYS_FILE_PATH = 'F:/CANVAS/clear_sky_days_01-2019_07-2020_manual.csv'
 
@@ -90,21 +93,9 @@ data_date_list = ["2019-07-03","2019-07-04","2019-07-05", #"2019-07-01",
                     "2020-04-21","2020-04-22","2020-04-23","2020-04-24","2020-04-25",
                     "2020-04-26","2020-04-27","2020-04-28","2020-04-29","2020-04-30"]
 
-# Get the colour scheme. Note, same month has same colour for each month
-cmap = plt.cm.get_cmap('viridis')
-colour_list = [cmap(0.08), cmap(0.17), cmap(0.25), cmap(0.33), cmap(0.42), cmap(0.50), cmap(0.58), cmap(0.67), cmap(0.75), cmap(0.83), cmap(0.92), cmap(1.00)]
-colour_list_seasons_24_days = [colour_list[0], colour_list[0],colour_list[0], colour_list[0], colour_list[3], colour_list[3], colour_list[3],  colour_list[3], colour_list[3], colour_list[3], colour_list[8], colour_list[8],colour_list[8], colour_list[8], colour_list[8],colour_list[8], colour_list[11], colour_list[11], colour_list[11], colour_list[11], colour_list[11], colour_list[11], colour_list[0],colour_list[0]]
-colour_list_two = [cmap(0.08), cmap(0.08), cmap(0.17), cmap(0.17), cmap(0.25), cmap(0.25), cmap(0.33), cmap(0.33), cmap(0.42), cmap(0.42), cmap(0.50), cmap(0.50), cmap(0.58), cmap(0.58), cmap(0.67), cmap(0.67), cmap(0.75), cmap(0.75), cmap(0.83), cmap(0.83), cmap(0.92), cmap(0.92), cmap(1.00), cmap(1.00)]
-colour_list_24_diff_colours = [cmap(0.041666667), cmap(0.083333333), cmap(0.125), cmap(0.166666667), cmap(0.208333333), cmap(0.25), cmap(0.291666667), cmap(0.333333333), cmap(0.375), cmap(0.416666667), cmap(0.458333333), cmap(0.5), cmap(0.541666667), cmap(0.583333333), cmap(0.625), cmap(0.666666667), cmap(0.708333333), cmap(0.75), cmap(0.791666667), cmap(0.833333333), cmap(0.875), cmap(0.916666667), cmap(0.958333333), cmap(1.0)]
-# Define some specific colours, note they can be RGB but must be given as a number between 0 and 1. In order to get these floats, divide by 255.
-purple = (87/255,30/255,201/255)
-pale_pale_purple = (240/255,234/255,252/255)
-pale_purple = (179/255,149/255,239/255)
-pale_turquoise = (186/255,232/255,225/255)
-
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-#------------------------ Import all data
+#------------------------ Import all summary data and combine
 
 # First import the first data date so we've got something to join onto
 sum_stats_df = pd.read_csv(INPUT_FILE_PATH + date_1 + SUM_STATS_FILE_NAME)
@@ -129,8 +120,85 @@ sum_stats_df['month'] = sum_stats_df['date'].str[5:7]
 sum_stats_df['month'] = sum_stats_df['month'].astype(int)
 sum_stats_df['month_string'] = sum_stats_df['month'].apply(lambda x: calendar.month_abbr[x])
 
-# Export data to csv
+#------------------------ Import all timeseries data for a specific site and combine
+site_list = [962508189, 1768287280, 878597128, 1081062438, 454204467]
+site_list = [962508189]
+# First import the first data date so we've got something to join onto
+ts_df = pd.read_csv(INPUT_FILE_PATH + date_1 + TS_FILE_NAME, index_col = 't_stamp', parse_dates=True )
+ts_df = ts_df.loc[:, ~ts_df.columns.str.contains('^Unnamed')]
+ts_df = ts_df[ts_df['site_id'].isin(site_list)]
+ts_df['t_stamp_copy'] = ts_df.index
+# Get curtail period start time (for getting voltage)
+start_times_df = pd.read_csv(LINEAR_INPUT_FILE_PATH + date_1 + LINEAR_FILE_NAME, index_col = 't_stamp', parse_dates=True)
+start_times_df = start_times_df[start_times_df['site_id'].isin(site_list)]
+start_times_df = start_times_df[['start_pts']]
+# # Going to concat and assume the order is the same.
+# test_df = pd.concat([ts_df, start_times_df], axis = 1)
+# Merge the start_pts onto ts_df
+ts_df = pd.merge(ts_df,start_times_df, right_index=True, left_index=True)
+ts_df['date'] = date_1
+
+# Cycle through each date and append on the next df
+for date_now in data_date_list:
+    temp_df = pd.read_csv(INPUT_FILE_PATH + date_now + TS_FILE_NAME, index_col = 't_stamp', parse_dates=True)
+    temp_df = temp_df.loc[:, ~temp_df.columns.str.contains('^Unnamed')]
+    temp_df = temp_df[temp_df['site_id'].isin(site_list)]
+    # Get curtail period start time (for getting voltage)
+    temp_start_times_df = pd.read_csv(LINEAR_INPUT_FILE_PATH + date_now + LINEAR_FILE_NAME, index_col='t_stamp',
+                                 parse_dates=True)
+    temp_start_times_df = temp_start_times_df[temp_start_times_df['site_id'].isin(site_list)]
+    temp_start_times_df = temp_start_times_df[['start_pts']]
+    # Merge the start_pts onto ts_df
+    temp_df = pd.merge(temp_df, temp_start_times_df, right_index=True, left_index=True)
+    temp_df['date'] = date_now
+    # Add onto ts_df
+    ts_df = pd.concat([ts_df, temp_df])
+
+# Some of the start_pts are at the end of the day (must be filtered out later int he curtail scripts...)
+# So, get start pts my own way - first get a copy of start_pts
+ts_df['start_pts_check'] = ts_df['start_pts']
+# Then check whether est_cf_preferred is nan and set these values of start_pts_check to zero
+ts_df.loc[np.isnan(ts_df['est_cf_preferred']), 'start_pts_check'] = 0
+
+# Plot voltage distribution
+fig, ax = plt.subplots()
+sns.boxplot(x='start_pts_check', y='v', data=ts_df, showmeans=True)
+plt.show()
+
+# Export data
+ts_df.to_csv(OUTPUT_FILE_PATH + "100_full_10_months_ts_data_site_962508189_CHECK" + OUTPUT_VERSION + ".csv")
+
+# Plot for single site
+fig, ax = plt.subplots()
+ax.plot(ts_df['cf'], c='purple', label='cf')
+ax.plot(ts_df['est_cf_preferred'], c='blue', label='Estaimted cf (preferred)')
+ax1 = ax.twinx()
+ax1.plot(ts_df['v'])
+ax1.plot(ts_df['v']*ts_df['start_pts'],  'o', c='red')
+ax1.plot(ts_df['v']*ts_df['start_pts_check'],  'o', c='yellow')
+ax1.grid(False)
+ax.legend(loc='upper right')
+plt.show()
+
+# Purpose 2 - check voltages at 'start' time
+ts_df_test = pd.read_csv("F:/05_Solar_Analytics/2021-05-31_CANVAS_Solar_Analytics_data/02_Curtail_output/" + date_1 + "_analysis_profiles_FULL_DETAIL_v4.csv")
+
+#------------------------ Check average curtailment for sites impacted
+average_curtailment_impacted_sites = sum_stats_df['percentage_lost_preferred'].mean()
+# Check average curtailment for ALL sites
+sum_stats_df_TEST = sum_stats_df.copy()
+sum_stats_df_TEST['percentage_lost_preferred'] = sum_stats_df_TEST['percentage_lost_preferred'].fillna(0)
+average_curtailment_all_sites = sum_stats_df_TEST['percentage_lost_preferred'].mean()
+# Check average curtailment for sites impacted on clear sky days
+sum_stats_df_clear_sky_days = sum_stats_df[sum_stats_df['clear_sky_day_flag']==1]
+average_curtailment_impacted_sites_clear_sky_days = sum_stats_df_clear_sky_days['percentage_lost_preferred'].mean()
+# Check average curtailment for ALL sites on clear sky days
+sum_stats_df_clear_sky_days_all_sites = sum_stats_df_TEST[sum_stats_df_TEST['clear_sky_day_flag']==1]
+average_curtailment_all_sites_clear_sky_days = sum_stats_df_clear_sky_days_all_sites['percentage_lost_preferred'].mean()
+
+#------------------------ Export data to csv
 sum_stats_df.to_csv(OUTPUT_FILE_PATH + "00_summary_stats" + OUTPUT_VERSION + ".csv")
+sum_stats_df_TEST.to_csv(OUTPUT_FILE_PATH + "00_summary_stats_with_zeros" + OUTPUT_VERSION + ".csv")
 
 #------------------------ Get the number of sites in the dataset for each date
 plot_1_df = pd.DataFrame({'site_count' : sum_stats_df.groupby('date')['site_id'].count(),
@@ -166,7 +234,7 @@ plot_2_df = pd.DataFrame({'site_id' : sum_stats_df.groupby('site_id')['site_id']
 plot_2_df['percentage_lost_over_10_mon'] = plot_2_df['sum_gen_loss_est_kWh_preferred'] / plot_2_df['sum_gen_kWh']
 plot_2_df['percentage_dates_experiencing_curtailment'] = plot_2_df['count_dates_with_curtail'] / plot_2_df['count_dates']
 plot_2_df = plot_2_df.sort_values('percentage_lost_over_10_mon', ascending=False)
-# plot_2_df = plot_2_df.sort_values('percentage_dates_experiencing_curtailment', ascending=False)
+plot_2_df = plot_2_df.sort_values('percentage_dates_experiencing_curtailment', ascending=False)
 
 # Get proportion of sites for plotting
 plot_2_df['proportion_of_sites_for_plotting'] = range(len(plot_2_df))
@@ -214,12 +282,8 @@ plot_3_df.to_csv(OUTPUT_FILE_PATH + "03_findings_by_site_clear_sky_days" + OUTPU
 
 
 #------------------------ Get curtailment over the year (by month)
-# # NOTE to self - boxplot automatically ignores empty rows, so the boxplot of sum_stats is actually only plotting the
-# # spread of curtailment at sites that experience curtailment, not across the whole dataset.
-# sum_stats_df_TEST = sum_stats_df.copy()
-# sum_stats_df_TEST['percentage_lost'] = sum_stats_df_TEST['percentage_lost'].fillna(0)
-# # Looking only at curtailed sites - NOT necessary - as above, boxplot automatically only looks at rows with data.
-# sum_stats_df_curtailed_sites = sum_stats_df[sum_stats_df['percentage_lost'] > 0]
+# NOTE to self - boxplot automatically ignores empty rows, so the boxplot of sum_stats is actually only plotting the
+# spread of curtailment at sites that experience curtailment, not across the whole dataset.
 # Plot the spread of curtailment over each month FOR SITES EXPERIENCING CURTAILMENT
 fig, ax= plt.subplots()
 sns.boxplot(x='month_string', y='percentage_lost', data=sum_stats_df,
