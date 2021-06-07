@@ -121,7 +121,6 @@ sum_stats_df['month'] = sum_stats_df['month'].astype(int)
 sum_stats_df['month_string'] = sum_stats_df['month'].apply(lambda x: calendar.month_abbr[x])
 
 #------------------------ Import all timeseries data for a specific site and combine
-site_list = [962508189, 1768287280, 878597128, 1081062438, 454204467]
 site_list = [962508189]
 # First import the first data date so we've got something to join onto
 ts_df = pd.read_csv(INPUT_FILE_PATH + date_1 + TS_FILE_NAME, index_col = 't_stamp', parse_dates=True )
@@ -165,9 +164,6 @@ fig, ax = plt.subplots()
 sns.boxplot(x='start_pts_check', y='v', data=ts_df, showmeans=True)
 plt.show()
 
-# Export data
-ts_df.to_csv(OUTPUT_FILE_PATH + "100_full_10_months_ts_data_site_962508189_CHECK" + OUTPUT_VERSION + ".csv")
-
 # Plot for single site
 fig, ax = plt.subplots()
 ax.plot(ts_df['cf'], c='purple', label='cf')
@@ -180,8 +176,28 @@ ax1.grid(False)
 ax.legend(loc='upper right')
 plt.show()
 
-# Purpose 2 - check voltages at 'start' time
-ts_df_test = pd.read_csv("F:/05_Solar_Analytics/2021-05-31_CANVAS_Solar_Analytics_data/02_Curtail_output/" + date_1 + "_analysis_profiles_FULL_DETAIL_v4.csv")
+# Export data
+ts_df.to_csv(OUTPUT_FILE_PATH + "100_full_10_months_ts_data_site_454204467_CHECK" + OUTPUT_VERSION + ".csv")
+
+# Then import data for each of the five most impacted sites and plot voltage plots on the same chart
+site_list = [1768287280, 878597128, 1081062438, 454204467]
+site_1 = 962508189
+impacted_sites_df = pd.read_csv(OUTPUT_FILE_PATH + "100_full_10_months_ts_data_site_" + str(site_1) + "_CHECK" + OUTPUT_VERSION + ".csv" , index_col = 't_stamp', parse_dates=True)
+for site in site_list:
+    temp_impacted_sites_df = pd.read_csv(OUTPUT_FILE_PATH + "100_full_10_months_ts_data_site_" + str(site) + "_CHECK" + OUTPUT_VERSION + ".csv" , index_col = 't_stamp', parse_dates=True)
+    impacted_sites_df = pd.concat([impacted_sites_df, temp_impacted_sites_df])
+
+# plot
+fig, ax = plt.subplots()
+sns.boxplot(x='site_id', y='v', data=impacted_sites_df, showmeans=True, hue='start_pts_check',
+            order = [962508189, 1768287280, 878597128, 1081062438, 454204467])
+# legend_label = ["(18, 30)", "(30, 40)"]
+# fig.legend(title="Age Group")
+# n = 0
+# for i in legend_label:
+#     fig.legend_.texts[n].set_text(i)
+#     n += 1
+plt.show()
 
 #------------------------ Check average curtailment for sites impacted
 average_curtailment_impacted_sites = sum_stats_df['percentage_lost_preferred'].mean()
@@ -299,3 +315,23 @@ plt.ylabel('Percentage generation lost')
 #             bbox_inches = 'tight', pad_inches = 0)
 plt.show()
 
+#------------------------ Get average curtailment by postcode
+# This summarises by postcode starting with all dates and all sites.
+# i.e. the max percentage lost will give the max at any given site on any given day.
+plot_4_df = pd.DataFrame({'post_code' : sum_stats_df.groupby('s_postcode')['s_postcode'].first(),
+                          'count_dates': sum_stats_df.groupby('s_postcode')['date'].nunique(),
+                          'count_dates_with_curtail': sum_stats_df.groupby('s_postcode')['percentage_lost'].nunique(),
+                          'count_unique_sites' : sum_stats_df.groupby('s_postcode')['site_id'].nunique(),
+                          'max_percentage_lost_preferred' : sum_stats_df.groupby('s_postcode')['percentage_lost_preferred'].max(),
+                          'min_percentage_lost_preferred': sum_stats_df.groupby('s_postcode')['percentage_lost_preferred'].min(),
+                          'mean_percentage_lost_preferred' : sum_stats_df.groupby('s_postcode')['percentage_lost_preferred'].mean()})
+
+# THIS version looks at the already summarised by site data.
+# i.e. the max percent lost will give the max at any given site over the entire 10mon period.
+plot_5_df = pd.DataFrame({'post_code' : plot_2_df.groupby('s_postcode')['s_postcode'].first(),
+                          'count_unique_sites' : plot_2_df.groupby('s_postcode')['site_id'].count(),
+                          'max_percentage_lost_preferred' : plot_2_df.groupby('s_postcode')['percentage_lost_over_10_mon'].max(),
+                          'min_percentage_lost_preferred': plot_2_df.groupby('s_postcode')['percentage_lost_over_10_mon'].min(),
+                          'mean_percentage_lost_preferred' : plot_2_df.groupby('s_postcode')['percentage_lost_over_10_mon'].mean()})
+
+plot_5_df.to_csv(OUTPUT_FILE_PATH + "04_findings_by_postcode" + OUTPUT_VERSION + ".csv")
